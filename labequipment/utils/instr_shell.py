@@ -13,12 +13,28 @@ class MyParser(argparse.ArgumentParser):
 
     def print_help(self, file=...):
         super().print_help()
-        print("\nUse 'r' before a command to enable listening for reply from the instrument")
-        print("\nExmaple:")
-        print("HOST: r*IDN?    <--- instrument should answer with ID")
-        print("INSTR: 'HEWLETT-PACKARD,6632B,0,A.01.04'")
-        print("")
-        print("HOST: OUTP ON   <--- no answer expected")
+        print("\nshell commands:\n")
+        print("[INSTR COMMAND]            Send a command to an instrument")
+        print("r[INSTR COMMAND]           Send a command to an instrument and expect an answer")
+        print("                           If [INSTR COMMAND] is omitted, only expect an answer without asking")
+        print("                           Example: r*IDN?")
+        print("raw,<NUM>[,INSTR COMMAND]  Send a command to an instrument and expect a raw answer")
+        print("                           <NUM> = number of bytes to receive must be given")
+        print("                           [INSTR COMMAND] is optional and must be separated by a comma fom <NUM>")
+        print("                           Example: raw,16,*IDN?")
+        print("reconnect                  Reconnect the instrument (resets the connection)")
+        print("xyph,<XYPHRO COMMAND>      Send a configuration command to the xyphro UsbGpib adaptor")
+        print("                           <XYPHRO COMMAND> must be given")
+        print("                           See https://github.com/xyphro/UsbGpib?tab=readme-ov-file#setting-parameters")
+        print("\n")
+        print("Example instrument interaction:\n")
+        print("HOST: r*IDN?")
+        print("INSTR: >HEWLETT-PACKARD,34401A,0,10-5-2<")
+        print("HOST: CONF:VOLT:DC")
+        print("HOST: INIT:IMM")
+        print("HOST: rFETCH?")
+        print("INSTR: >+4.82800000E-06<")
+        print("\n")
 
 
 class GenericInstrument(device.device):
@@ -117,6 +133,12 @@ if __name__ == "__main__":
                 else:
                     command = user_in[1:]
                     no_bytes = 0
+            elif user_in.startswith("help"):
+                parser.print_help()
+                user_in = ""
+                command = ""
+                reply_expected = False
+                xyphro_command = False
             elif user_in.startswith("xyph"):
                 user_in = user_in.split(',')
                 reply_expected = False

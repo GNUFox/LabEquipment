@@ -40,8 +40,6 @@ def main():
 
     awg.disable_output()
 
-    return 0  # TODO: create useful tests
-
 
 if __name__ == "__main__":
     main()

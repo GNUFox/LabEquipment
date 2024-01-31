@@ -117,7 +117,6 @@ class ORX_402A(AWG.AWG):
     The solution is to keep track of the internal state.
     """
     _friendly_name = "OR-X 402A"
-    # TODO: add cache data type (?)
 
     min_freq = 0.004
     max_freq = 9.99E6
@@ -160,20 +159,19 @@ class ORX_402A(AWG.AWG):
         with self._lock:
             connect_success = self._connection.connect()
             if connect_success == 0:
-                # TODO: add some sort of id (instrument does not provide ID but answers with status)
                 # display addr to show connection
-                self.send_command("Z488")
+                self.send_command("Z488")  # TODO: error handling
 
                 if not self._is_dummy_dev:
                     time.sleep(3)  # Wait after first command / connect otherwise "ERROR 9-1" (Syntax error) happens
                     self.send_command("N0")
                     self._ok = self._get_all_and_ok()
-                logger.debug(f"Connected to {self._friendly_name}")
+                if not self._ok:
+                    logger.debug(f"Connected to {self._friendly_name}")
+                else:
+                    logger.error("Connection success but no answer")
             else:
                 logger.error("Connection failed")
-                # TODO: error handling
-        if not self._ok:
-            logger.error("Connection success but ")
 
     def set_frequency(self, frequency: float, output_nr=0):
         """
@@ -227,6 +225,11 @@ class ORX_402A(AWG.AWG):
             self._internal_state_dirty = True
 
     def get_frequency(self, output_nr=0) -> float:
+        """
+        Get the currently set frequency
+        :param output_nr:  not used
+        :return: frequency in Hz (float)
+        """
         if self._internal_state_dirty:
             with self._lock:
                 self.send_command("?F")
@@ -250,6 +253,11 @@ class ORX_402A(AWG.AWG):
             self._internal_state_dirty = True
 
     def get_waveform(self, output_nr: int = 0) -> Waveforms:
+        """
+        Get the currently selected waveform
+        :param output_nr: not used
+        :return: Waveforms-Enum
+        """
         if self._internal_state_dirty:
             with self._lock:
                 self.send_command("?W")
@@ -291,6 +299,11 @@ class ORX_402A(AWG.AWG):
             self._internal_state_dirty = True
 
     def get_amplitude(self, output_nr: int = 0) -> float:
+        """
+        Get the currentl set amplitude
+        :param output_nr:  not used
+        :return: amplitude in V (float)
+        """
         if self._internal_state_dirty:
             with self._lock:
                 self.send_command("?A")
@@ -331,6 +344,11 @@ class ORX_402A(AWG.AWG):
             self._internal_state_dirty = True
 
     def get_offset(self, output_nr: int = 0) -> float:
+        """
+        Get the currently set offset
+        :param output_nr:  not used
+        :return: offset in V (float)
+        """
         if self._internal_state_dirty:
             with self._lock:
                 self.send_command("?O")
@@ -363,6 +381,11 @@ class ORX_402A(AWG.AWG):
             self._internal_state_dirty = True
 
     def get_output_state(self, output_nr: int = 0) -> OutputState:
+        """
+        Get the output state
+        :param output_nr:  not used
+        :return: OutputState-Enum
+        """
         if self._internal_state_dirty:
             with self._lock:
                 self.send_command("?N")
@@ -371,6 +394,12 @@ class ORX_402A(AWG.AWG):
         return self._set_output_on
 
     def _get_all_and_ok(self) -> bool:
+        """
+        Used during initial connection, get the most important values to set up tracked parameters (Freq, Ampl, ...)
+        This function should work without errors, if error occur it should return false (the "_ok" state)
+        :return:  True:  everything worked, instrument is ready for use
+                  False: errors occured, instrument is not ready for use
+        """
         if not self._lock.locked():
             return False
 
