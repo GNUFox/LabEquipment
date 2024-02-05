@@ -21,4 +21,6 @@ def setup_custom_logger(name, stdout_level=logging.DEBUG, file_level=logging.DEB
     return logger
 
 
-setup_custom_logger('root', stdout_level=logging.DEBUG, file_level=logging.DEBUG)
+setup_custom_logger('root',
+                    stdout_level=GlobalDefaults.stdout_loglevel,
+                    file_level=GlobalDefaults.file_loglevel)

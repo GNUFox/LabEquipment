@@ -9,6 +9,7 @@ from labequipment.device.PSU import HP6632B
 load_dotenv()
 visa_res = os.getenv("HP_PSU_VISA_RES")
 
+
 def test():
     psu = HP6632B.HP6632B(visa_resource=visa_res)
     # psu = HP6632B.HP6632B()

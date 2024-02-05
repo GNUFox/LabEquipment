@@ -169,6 +169,8 @@ class USBTMCConnection(Connection):
         if not visa_resource == "" and usbtmc_id == "" and serial_no == "":
             # VISA RESOURCE STRING
             if visa_resource.startswith("USB"):  # TODO: check visa string format maybe?
+                if not visa_resource.endswith("::INSTR"):
+                    visa_resource = visa_resource + "::INSTR"
                 self._visa_resource_string = visa_resource
                 # TODO: maybe add "::INSTR" at the end?
                 #  when user scans with vish or other tools they may not get ::INSTR
@@ -211,6 +213,8 @@ class USBTMCConnection(Connection):
             data = self._usbtmc_connection.read()
         except UsbtmcException:
             logger.error("Reading USBTMC data failed")
+        except USBTimeoutError:
+            logger.error("Timeout while reading USBTMC data")
 
         return data
 
