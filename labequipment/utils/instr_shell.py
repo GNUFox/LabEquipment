@@ -89,7 +89,7 @@ if __name__ == "__main__":
     instr_command = True
     xyphro_command = False
     command = ""
-    xyphro_command_ref: XyphroUSBGPIBConfig
+    xyphro_command_ref = XyphroUSBGPIBConfig.GET_VER
     no_bytes = 0
     terminator_add = ""
     while 1:

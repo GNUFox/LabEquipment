@@ -78,29 +78,29 @@ class TestHWLoopackSetCommands(TesetORX_402A):
     def test_set_frequency(self):
         for i in frequencies.items():
             self.awg.set_frequency(i[0])
-            self.assertEqual(self.awg.get_frequency(), i[0])
+            self.assertEqual(self.awg.get_frequency_from_device(), i[0])
 
     def test_set_amplitude(self):
         for i in amplitudes_hw.items():
             self.awg.set_amplitude(i[0])
-            self.assertEqual(self.awg.get_amplitude(), i[0])
+            self.assertEqual(self.awg.get_amplitude_from_device(), i[0])
 
     def test_set_offset(self):
         self.awg.set_amplitude(1)
         for i in offsets_hw.items():
             self.awg.set_offset(i[0])
-            self.assertEqual(self.awg.get_offset(), i[0])
+            self.assertEqual(self.awg.get_offset_from_device(), i[0])
 
     def test_set_output(self):
         self.awg.enable_output()
-        self.assertEqual(self.awg.get_output_state(), OutputState.ON)
+        self.assertEqual(self.awg.get_output_state_from_device(), OutputState.ON)
         self.awg.disable_output()
-        self.assertEqual(self.awg.get_output_state(), OutputState.OFF)
+        self.assertEqual(self.awg.get_output_state_from_device(), OutputState.OFF)
 
     def test_set_waveform(self):
         for i in waveforms.items():
             self.awg.set_waveform(i[0])
-            self.assertEqual(self.awg.get_waveform(), i[0])
+            self.assertEqual(self.awg.get_waveform_from_device(), i[0])
 
 
 class TestSetCommands(TestORX_402A_DUMMY):

@@ -67,7 +67,7 @@ def _extract_volts(reply: str) -> float:
 
 
 def _extract_output_state(reply: str) -> OutputState:
-    ret: OutputState
+    ret: OutputState = OutputState.OFF
     try:
         ret = OutputState(reply)
     except ValueError:
@@ -77,7 +77,7 @@ def _extract_output_state(reply: str) -> OutputState:
 
 
 def _extract_waveform(reply: str) -> Waveforms:
-    ret: Waveforms
+    ret: Waveforms = Waveforms.SINE
     try:
         ret = Waveforms(reply)
     except ValueError:
@@ -123,7 +123,6 @@ class ORX_402A(AWG.AWG):
     min_ampl_V = 10E-3
     max_ampl_V = 9.99
 
-    _internal_state_dirty: bool
     _set_freq: float
     _set_ampl: float
     _set_offset: float
@@ -138,7 +137,6 @@ class ORX_402A(AWG.AWG):
             self._is_dummy_dev = True
             self._connection = DummyConnection()
 
-        self._internal_state_dirty = False
         self._set_freq = 0
         self._set_ampl = 0
         self._set_offset = 0
@@ -222,7 +220,6 @@ class ORX_402A(AWG.AWG):
         with self._lock:
             self.send_command(f"F{freq_for_cmd}{freq_unit_for_cmd.value}")  # F1234KHZ
             self._set_freq = frequency
-            self._internal_state_dirty = True
 
     def get_frequency(self, output_nr=0) -> float:
         """
@@ -230,14 +227,15 @@ class ORX_402A(AWG.AWG):
         :param output_nr:  not used
         :return: frequency in Hz (float)
         """
-        if self._internal_state_dirty:
-            with self._lock:
-                self.send_command("?F")
-                reply = self.receive_data()
+        return self._set_freq
 
-                temp = _extract_parameter(reply, "F", _extract_hertz)
-                # TODO: error checking if temp is error_type etc.
-                self._set_freq = temp
+    def get_frequency_from_device(self) -> float:
+        with self._lock:
+            self.send_command("?F")
+            reply = self.receive_data()
+
+            self._set_freq = _extract_parameter(reply, "F", _extract_hertz)
+            # TODO: error checking if temp is error_type etc.
         return self._set_freq
 
     def set_waveform(self, waveform: Waveforms, output_nr=0):
@@ -250,7 +248,6 @@ class ORX_402A(AWG.AWG):
         with self._lock:
             self.send_command(f"{waveform.value}")
             self._set_waveform = waveform
-            self._internal_state_dirty = True
 
     def get_waveform(self, output_nr: int = 0) -> Waveforms:
         """
@@ -258,12 +255,14 @@ class ORX_402A(AWG.AWG):
         :param output_nr: not used
         :return: Waveforms-Enum
         """
-        if self._internal_state_dirty:
-            with self._lock:
-                self.send_command("?W")
-                reply = self.receive_data()
-                self._set_waveform = _extract_parameter(reply, "W", _extract_waveform)
-                # TODO: error checking if temp is error_type etc.
+        return self._set_waveform
+
+    def get_waveform_from_device(self) -> Waveforms:
+        with self._lock:
+            self.send_command("?W")
+            reply = self.receive_data()
+            self._set_waveform = _extract_parameter(reply, "W", _extract_waveform)
+            # TODO: error checking if temp is error_type etc.
         return self._set_waveform
 
     def set_amplitude(self, amp: float, output_nr=0):
@@ -275,7 +274,7 @@ class ORX_402A(AWG.AWG):
         """
         max_ampl: float
         if self._set_offset > 0:
-            max_ampl = 2 * (4.99 * get_voltage_range(amp) - self._set_offset)
+            max_ampl = 2 * (4.99 * get_voltage_range(amp) - self._set_offset) # Forumla from manual
         else:
             max_ampl = self.max_ampl_V
 
@@ -296,7 +295,6 @@ class ORX_402A(AWG.AWG):
         with self._lock:
             self.send_command(f"A{amp_for_cmd}{amp_unit_for_cmd.value}")
             self._set_ampl = amp
-            self._internal_state_dirty = True
 
     def get_amplitude(self, output_nr: int = 0) -> float:
         """
@@ -304,13 +302,15 @@ class ORX_402A(AWG.AWG):
         :param output_nr:  not used
         :return: amplitude in V (float)
         """
-        if self._internal_state_dirty:
-            with self._lock:
-                self.send_command("?A")
-                reply = self.receive_data()
-                temp = _extract_parameter(reply, "A", _extract_volts)
-                # TODO: error checking if temp is error_type etc.
-                self._set_ampl = temp
+        return self._set_ampl
+
+    def get_amplitude_from_device(self) -> float:
+        with self._lock:
+            self.send_command("?A")
+            reply = self.receive_data()
+            temp = _extract_parameter(reply, "A", _extract_volts)
+            # TODO: error checking if temp is error_type etc.
+            self._set_ampl = temp
         return self._set_ampl
 
     def set_offset(self, offset: int, output_nr: int = 0) -> None:
@@ -321,7 +321,7 @@ class ORX_402A(AWG.AWG):
         @param output_nr:  not used
         @return:
         """
-        max_offset = 4.99 * get_voltage_range(self._set_ampl) - 0.5 * self._set_ampl
+        max_offset = 4.99 * get_voltage_range(self._set_ampl) - 0.5 * self._set_ampl  # Forumla from manual
         if not abs(offset) <= max_offset:
             logger.error(f"Offset ({offset}) out of range, max offset: +/-{max_offset}")
             return
@@ -341,7 +341,6 @@ class ORX_402A(AWG.AWG):
         with self._lock:
             self.send_command(f"O{offset_for_cmd}{offset_unit_for_cmd.value}")
             self._set_offset = offset_round  # TODO: check???
-            self._internal_state_dirty = True
 
     def get_offset(self, output_nr: int = 0) -> float:
         """
@@ -349,13 +348,14 @@ class ORX_402A(AWG.AWG):
         :param output_nr:  not used
         :return: offset in V (float)
         """
-        if self._internal_state_dirty:
-            with self._lock:
-                self.send_command("?O")
-                reply = self.receive_data()
-                temp = _extract_parameter(reply, "O", _extract_volts)
-                # TODO: error checking if temp is error_type etc.
-                self._set_offset = temp
+        return self._set_offset
+
+    def get_offset_from_device(self) -> float:
+        with self._lock:
+            self.send_command("?O")
+            reply = self.receive_data()
+            self._set_offset = _extract_parameter(reply, "O", _extract_volts)
+            # TODO: error checking if temp is error_type etc.
         return self._set_offset
 
     def enable_output(self, output_nr=0) -> None:
@@ -367,7 +367,6 @@ class ORX_402A(AWG.AWG):
         with self._lock:
             self._set_output_on = OutputState.ON
             self.send_command(self._set_output_on.value)
-            self._internal_state_dirty = True
 
     def disable_output(self, output_nr=0) -> None:
         """
@@ -378,7 +377,6 @@ class ORX_402A(AWG.AWG):
         with self._lock:
             self._set_output_on = OutputState.OFF
             self.send_command(self._set_output_on.value)
-            self._internal_state_dirty = True
 
     def get_output_state(self, output_nr: int = 0) -> OutputState:
         """
@@ -386,11 +384,13 @@ class ORX_402A(AWG.AWG):
         :param output_nr:  not used
         :return: OutputState-Enum
         """
-        if self._internal_state_dirty:
-            with self._lock:
-                self.send_command("?N")
-                reply = self.receive_data()
-                self._set_output_on = _extract_parameter(reply, "N", _extract_output_state)
+        return self._set_output_on
+
+    def get_output_state_from_device(self) -> OutputState:
+        with self._lock:
+            self.send_command("?N")
+            reply = self.receive_data()
+            self._set_output_on = _extract_parameter(reply, "N", _extract_output_state)
         return self._set_output_on
 
     def _get_all_and_ok(self) -> bool:
