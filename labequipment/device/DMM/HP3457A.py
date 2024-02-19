@@ -10,8 +10,17 @@ from labequipment.framework import exceptions
 logger = logging.getLogger('root')
 
 
+class TriggerType(Enum):
+    auto = 1
+    external = 2
+    single = 3
+    hold = 4
+    synchronized = 5
+
+
 class HP3457A(DMM.DMM):
     _expected_device_type = "HP3457A"
+    _friendly_name = "HP 3457A Multimeter"
     # DCV 0.0000009,1 no
     # DCV 0.000001,1 yes
     vrange_max = 300
@@ -26,13 +35,6 @@ class HP3457A(DMM.DMM):
     CONST_AUTO = -1
 
     _reset_after_connect: bool = False
-
-    class TriggerType(Enum):
-        auto = 1
-        external = 2
-        single = 3
-        hold = 4
-        synchronized = 5
 
     def __init__(self, visa_resource="", reset_after_connect=False):
         super().__init__()
@@ -80,7 +82,7 @@ class HP3457A(DMM.DMM):
         elif dc_ac == 'ac':
             acdc_conf = acdc.AC
         self.configure_voltage(dc_ac=acdc_conf, vrange=vrange, res=res)
-        self.configure_trigger(self.TriggerType.single)
+        self.configure_trigger(TriggerType.single)
         answer = self._connection.receive_data()
         ret: float = 0
         try:
@@ -126,6 +128,10 @@ class HP3457A(DMM.DMM):
         with self._lock:  # TODO check locking design (deadlock / functions unable to use)
             self.send_command(f"TRIG {trigger.value}")
 
+    def single_trigger_and_get_value(self) -> str:
+        self.configure_trigger(TriggerType.single)
+        return self._connection.receive_data()
+
     def tone(self, freq: int, dur: int):
         self.send_command(f"TONE {freq},{dur}")
 
@@ -134,4 +140,4 @@ class HP3457A(DMM.DMM):
             logger.error(f"NPLC {nplc} outside of range [{self.nplc_min} {self.nplc_max}")
             return
         with self._lock:
-            self._connection.send_command(f"NPLC, {nplc}")
+            self._connection.send_command(f"NPLC {nplc}")

@@ -107,26 +107,26 @@ class TestSetCommands(TestORX_402A_DUMMY):
     def test_set_frequency(self):
         for i in frequencies.items():
             self.awg.set_frequency(i[0])
-            self.assertEqual(self.awg.test_get_last_command(), i[1])
+            self.assertEqual(self.awg._connection.get_last_command(), i[1])
 
     def test_set_amplitude(self):
         for i in amplitudes.items():
             self.awg.set_amplitude(i[0])
-            self.assertEqual(self.awg.test_get_last_command(), i[1])
+            self.assertEqual(self.awg._connection.get_last_command(), i[1])
 
     def test_set_offset(self):
         self.awg.set_amplitude(1)
         for i in offsets.items():
             self.awg.set_offset(i[0])
-            self.assertEqual(self.awg.test_get_last_command(), i[1])
+            self.assertEqual(self.awg._connection.get_last_command(), i[1])
 
     def test_set_output(self):
         self.awg.enable_output()
-        self.assertEqual(self.awg.test_get_last_command(), "N1")
+        self.assertEqual(self.awg._connection.get_last_command(), "N1")
         self.awg.disable_output()
-        self.assertEqual(self.awg.test_get_last_command(), "N0")
+        self.assertEqual(self.awg._connection.get_last_command(), "N0")
 
     def test_set_waveform(self):
         for i in waveforms.items():
             self.awg.set_waveform(i[0])
-            self.assertEqual(self.awg.test_get_last_command(), i[1])
+            self.assertEqual(self.awg._connection.get_last_command(), i[1])

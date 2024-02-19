@@ -61,26 +61,39 @@ class Connection(metaclass=ABCMeta):
     def get_last_command(self) -> str:
         pass
 
+    def get_last_commands_list(self) -> list:
+        pass
+
+    def clear_last_command_list(self):
+        pass
+
 
 class DummyConnection(Connection):
     """
     Create a dummy connection that never fails and always returns the required data
     """
     _destination = "DUMMY"
-    _last_command = ""
+    _last_commands: list
 
     def connect(self) -> int:
+        self._last_commands = []
         return 0
 
     def send_command(self, command: str):
         super().send_command(command)
-        self._last_command = command
+        self._last_commands.append(command)
 
     def receive_data(self, dummy_data="DUMMY") -> str:
         return dummy_data
 
     def get_last_command(self) -> str:
-        return self._last_command
+        return self._last_commands[-1]
+
+    def get_last_commands_list(self) -> list:
+        return self._last_commands
+
+    def clear_last_command_list(self):
+        self._last_commands = []
 
 
 class TelnetConnection(Connection):

@@ -7,6 +7,7 @@ logger = logging.getLogger('root')
 
 class HP34401A(DMM.DMM):
     _expected_device_type = "34401A"
+    _friendly_name = "HP 34401A Multimeter"
 
     def __init__(self, visa_resource: str = "", serial_dev: str = ""):
         super().__init__()

@@ -5,7 +5,7 @@ import time
 from dotenv import load_dotenv
 
 import labequipment.framework.log
-from labequipment.device.DMM.HP3457A import HP3457A, acdc
+from labequipment.device.DMM.HP3457A import HP3457A, acdc, TriggerType
 
 load_dotenv()
 visa_res = os.getenv("HP3457A_VISA_RES")
@@ -21,7 +21,7 @@ def main():
 
     print("### Configured voltage measurement with continuous trigger:\n V = [", end='')
     dmm.configure_voltage(dc_ac=acdc.DC, vrange=10, res=1)
-    dmm.configure_trigger(dmm.TriggerType.auto)
+    dmm.configure_trigger(TriggerType.auto)
     for i in range(10):
         answer = dmm.receive_data()
         v = float(answer)
