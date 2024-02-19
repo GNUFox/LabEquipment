@@ -34,6 +34,7 @@ class XyphroUSBGPIBConfig(Enum):
 # TODO: implement visa stuff? find library??
 # TODO: maybe implement data parsing / conversion in parent class because all subclasse smight need that
 class Connection(metaclass=ABCMeta):
+    connection_ok: bool
     @property
     @abstractmethod
     def _destination(self) -> str:
@@ -207,8 +208,8 @@ class USBTMCConnection(Connection):
         except UsbtmcException:
             logger.error("Sending command failed")
 
-    def receive_data(self) -> str:
-        data = ""
+    def receive_data(self):
+        data = None
         try:
             data = self._usbtmc_connection.read()
         except UsbtmcException:
@@ -218,8 +219,8 @@ class USBTMCConnection(Connection):
 
         return data
 
-    def receive_data_raw(self, n_bytes: int = -1) -> bytes:
-        data = b''
+    def receive_data_raw(self, n_bytes: int = -1) -> bytes | None:
+        data = None
         try:
             data = self._usbtmc_connection.read_raw(n_bytes)
         except UsbtmcException:

@@ -42,27 +42,35 @@ def get_voltage_range(voltage) -> float:
         return 0.01
 
 
-def _extract_hertz(reply: str) -> float:
+def _extract_hertz(reply: str) -> float | None:
     ret: float = 0
-    if reply.endswith(FreqUnits.KILOHERTZ.value):
-        ret = float(reply[1:-(len(FreqUnits.KILOHERTZ.value))]) * 1E3
-    elif reply.endswith(FreqUnits.HERTZ.value):
-        ret = float(reply[1:-(len(FreqUnits.HERTZ.value))])
-    else:
-        logger.error(f"Unexpected reply: {reply}, unit does not match")
-
+    try:
+        if reply.endswith(FreqUnits.KILOHERTZ.value):
+            ret = float(reply[1:-(len(FreqUnits.KILOHERTZ.value))]) * 1E3
+        elif reply.endswith(FreqUnits.HERTZ.value):
+            ret = float(reply[1:-(len(FreqUnits.HERTZ.value))])
+        else:
+            logger.error(f"Unexpected reply: '{reply}', unit does not match")
+            return None
+    except ValueError:
+        logger.error(f"Value error, '{reply}' could not be converted to float frequency")
+        return None
     return ret
 
 
-def _extract_volts(reply: str) -> float:
+def _extract_volts(reply: str) -> float | None:
     ret: float = 0
-    if reply.endswith(VoltageUnits.MILLIVOLT.value):
-        ret = float(reply[1:-(len(VoltageUnits.MILLIVOLT.value))]) * 1E-3
-    elif reply.endswith(VoltageUnits.VOLT.value):
-        ret = float(reply[1:-(len(VoltageUnits.VOLT.value))])
-    else:
-        logger.error(f"Unexpected reply: {reply}, unit does not match")
-
+    try:
+        if reply.endswith(VoltageUnits.MILLIVOLT.value):
+            ret = float(reply[1:-(len(VoltageUnits.MILLIVOLT.value))]) * 1E-3
+        elif reply.endswith(VoltageUnits.VOLT.value):
+            ret = float(reply[1:-(len(VoltageUnits.VOLT.value))])
+        else:
+            logger.error(f"Unexpected reply: {reply}, unit does not match")
+            return None
+    except ValueError:
+        logger.error(f"Value error, '{reply}' could not be converted to float volts")
+        return None
     return ret
 
 
@@ -97,12 +105,10 @@ def _extract_parameter(param: (list[str], str), param_prefix: str, extract_funct
                 break
         if param_str == "":
             logger.error(f"Parameter '{param_prefix}' not found in parameters: {param}")
-            # TODO: ret is error
     elif isinstance(param, str):
         param_str = param
     else:
         logger.error(f"Parameters '{param}' must be list[str] or str datatype")
-        # TODO: ret is error
     if param_str != "":
         ret = extract_function(param_str)
 
@@ -164,12 +170,14 @@ class ORX_402A(AWG.AWG):
                     time.sleep(3)  # Wait after first command / connect otherwise "ERROR 9-1" (Syntax error) happens
                     self.send_command("N0")
                     self._ok = self._get_all_and_ok()
-                if not self._ok:
+                if self._ok:
                     logger.debug(f"Connected to {self._friendly_name}")
                 else:
-                    logger.error("Connection success but no answer")
+                    logger.error("Connection success but no or incorrect answer")
             else:
                 logger.error("Connection failed")
+
+        return self._ok
 
     def set_frequency(self, frequency: float, output_nr=0):
         """
@@ -412,6 +420,13 @@ class ORX_402A(AWG.AWG):
         self._set_offset = _extract_parameter(reply_list, 'O', _extract_volts)
         self._set_waveform = _extract_parameter(reply_list, 'W', _extract_waveform)
         self._set_output_on = _extract_parameter(reply_list, 'N', _extract_output_state)
+
+        if self._set_freq is None \
+           or self._set_ampl is None \
+           or self._set_offset is None \
+           or self._set_waveform is None \
+           or self._set_output_on is None:
+            return False
 
         return True
 
