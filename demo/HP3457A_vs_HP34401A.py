@@ -5,7 +5,7 @@ import time
 from dotenv import load_dotenv
 
 import labequipment.framework.log
-from labequipment.device.DMM.HP3457A import HP3457A, acdc, TriggerType
+from labequipment.device.DMM.HP3457A import HP3457A, acdc, TriggerType, Terminals
 from labequipment.device.DMM.HP34401A import HP34401A
 
 load_dotenv()
@@ -18,6 +18,8 @@ def main():
     hp34401a = HP34401A(visa_resource=visa_res_hp34401a)
     hp3457a.connect()
     hp34401a.connect()
+
+    hp3457a.configure_terminals(Terminals.rear_or_card)
 
     print("### Quick Voltage measurement:", end='')
     volt_a = hp3457a.voltage()

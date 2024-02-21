@@ -3,7 +3,7 @@ from unittest import TestCase
 from dotenv import load_dotenv
 import labequipment.framework.log
 from labequipment.device.DMM import HP3457A
-from labequipment.device.DMM.HP3457A import TriggerType
+from labequipment.device.DMM.HP3457A import TriggerType, Terminals
 
 load_dotenv()
 
@@ -12,6 +12,11 @@ visa_res = os.getenv("HP3457A_VISA_RES")
 triggers = dict()
 for e in TriggerType:
     triggers[e] = f"TRIG {e.value}"
+
+
+terminals = dict()
+for e in Terminals:
+    terminals[e] = f"TERM {e.value}"
 
 
 class TestHP3457A(TestCase):
@@ -41,6 +46,11 @@ class TestSetCommands(TestHP3457A_DUMMY):
     def test_configure_trigger(self):
         for trigger, expected in triggers.items():
             self.dmm.configure_trigger(trigger)
+            self.assertEqual(self.dmm._connection.get_last_command(), expected)
+
+    def test_configure_terminals(self):
+        for term, expected in terminals.items():
+            self.dmm.configure_terminals(term)
             self.assertEqual(self.dmm._connection.get_last_command(), expected)
 
     def test_tone(self):

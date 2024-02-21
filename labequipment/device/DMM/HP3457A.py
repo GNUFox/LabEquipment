@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import IntEnum
 
 from labequipment.device.DMM import DMM
 from labequipment.device.DMM.DMM import acdc
@@ -10,13 +10,17 @@ from labequipment.framework import exceptions
 logger = logging.getLogger('root')
 
 
-class TriggerType(Enum):
+class TriggerType(IntEnum):
     auto = 1
     external = 2
     single = 3
     hold = 4
     synchronized = 5
 
+class Terminals(IntEnum):
+    disconnect = 0
+    front = 1
+    rear_or_card = 2
 
 class HP3457A(DMM.DMM):
     _expected_device_type = "HP3457A"
@@ -141,3 +145,7 @@ class HP3457A(DMM.DMM):
             return
         with self._lock:
             self._connection.send_command(f"NPLC {nplc}")
+
+    def configure_terminals(self, terminals: Terminals):
+        with self._lock:
+            self._connection.send_command(f"TERM {terminals.value}")
