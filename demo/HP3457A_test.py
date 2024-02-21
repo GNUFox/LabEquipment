@@ -20,7 +20,7 @@ def main():
     print(f"{volt}")
 
     print("### Configured voltage measurement with continuous trigger:\n V = [", end='')
-    dmm.configure_voltage(dc_ac=acdc.DC, vrange=10, res=1)
+    dmm.configure_voltage(ac_dc_mode=acdc.DC, meas_range=10, res=1)
     dmm.configure_trigger(TriggerType.auto)
     for i in range(10):
         answer = dmm.receive_data()

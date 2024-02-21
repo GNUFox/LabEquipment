@@ -35,6 +35,7 @@ class XyphroUSBGPIBConfig(Enum):
 # TODO: maybe implement data parsing / conversion in parent class because all subclasse smight need that
 class Connection(metaclass=ABCMeta):
     connection_ok: bool
+
     @property
     @abstractmethod
     def _destination(self) -> str:

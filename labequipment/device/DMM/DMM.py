@@ -1,16 +1,19 @@
-from enum import Enum
-
 from labequipment.device import device
-from labequipment.framework import exceptions
-import abc
+from abc import ABCMeta
+import logging
+
+logger = logging.getLogger('root')
 
 
-class acdc(Enum):
-    DC = 0
-    AC = 1
+class acdc(metaclass=ABCMeta):
+    DC = "DC"
+    AC = "AC"
 
 
-class DMM(device.device, metaclass=abc.ABCMeta):
+class DMM(device.device, metaclass=ABCMeta):
+    CONST_AUTO: int = -1
+    CONST_MIN: int = -2
+    CONST_MAX: int = -3
 
     # Simple (auto-range) measurement functions
     def capacitance(self):
@@ -29,47 +32,25 @@ class DMM(device.device, metaclass=abc.ABCMeta):
             ret = self.receive_data()
         return ret
 
-    # TODO: FIX THIS, use enum instead of strings for dc_ac
-    def current(self, dc_ac='dc', irange='auto', res='auto'):
-        """measure current with autorange and no configured resolution (standard behaviour)  
+    def current(self, ac_dc_mode: acdc = acdc.DC, meas_range: float | int = CONST_AUTO, res: float | int = CONST_AUTO):
+        """
+        Measure current with auto-range and no configured resolution (standard behaviour)
 
-        dc_ac ['dc']:     Choose DC or AC mode, Default: dc  
-        irange ['auto']:  Set current range (refer to DMM Manual for possible values), Defualt: auto  
-        res ['auto']:     Set Resolution (refer to DMM Manual for possible values), Default: auto  
-
-        __CAUTION__: using autorange could cause the circuit to be disconnected briefly
-
+        :param ac_dc_mode:  AC / DC mode
+        :param meas_range:  maximum current range
+        :param res:         resolution (usually in the same units as the measurement function,
+                            eg. 0.00001 for 6 digits when the range is 1
+        :return:            measured current or None
         """
 
         ret = 0
-        mod = "DC"
-        if dc_ac == 'ac':
-            mod = "AC"
-        elif not dc_ac == 'dc':
-            raise exceptions.InvalidDeviceParameter
+        command = f"MEAS:CURR:{ac_dc_mode}?"
 
-        command = f"MEAS:CURR:{mod}?"
-
-        if not irange == "auto":
-            # irange is specified
-            if isinstance(irange, int) or (
-                    isinstance(irange, str) and (irange.upper() == "MIN" or irange.upper() == "MAX")):
-                command += f" {irange}"
-            else:
-                raise exceptions.InvalidDeviceParameter
-
-            if not res == "auto":
-                if isinstance(res, int) or (isinstance(res, str) and (res.upper() == "MIN" or res.upper() == "MAX")):
-                    command += f",{res}"
-                else:
-                    raise exceptions.InvalidDeviceParameter
-
-        elif not res == "auto":
-            # if resolution is set, vrange MUST also be set
-            raise exceptions.InvalidDeviceParameter
+        ok, range_and_res = self._get_command_from_range_and_res(meas_range, res)
+        if ok:
+            command += range_and_res
         else:
-            # Both are auto
-            command += " AUTO"
+            return ret
 
         with self._lock:
             self.send_command(command)
@@ -131,46 +112,26 @@ class DMM(device.device, metaclass=abc.ABCMeta):
 
         return ret
 
-    def voltage(self, dc_ac='dc', vrange='auto', res='auto'):
-        """measure voltage with autorange and no configured resolution (standard behaviour)
+    def voltage(self, ac_dc_mode: acdc = acdc.DC, meas_range: float | int = CONST_AUTO, res: float | int = CONST_AUTO):
+        """
+        Measure voltage with auto-range and no configured resolution (default behaviour)
 
-        dc_ac ['dc']:     Choose DC or AC mode, Default: dc  
-        vrange ['auto']:  Set voltage range (refer to DMM Manual for possible values), Defualt: auto  
-        res ['auto']:     Set Resolution (refer to DMM Manual for possible values), Default: auto  
-
+        :param ac_dc_mode:  AC / DC mode
+        :param meas_range:  maximum voltage range
+        :param res:         resolution (usually in the same units as the measurement function,
+                            eg. 0.00001 for 6 digits when the range is 1
+        :return:            measured voltage or None
         """
         ret = 0
-        mod = "DC"
-        if dc_ac == 'ac':
-            mod = "AC"
-        elif not dc_ac == 'dc':
-            raise exceptions.InvalidDeviceParameter
+        command = f"MEAS:VOLT:{ac_dc_mode}?"
 
-        command = f"MEAS:VOLT:{mod}?"
-
-        if not vrange == "auto":
-            # vrange is specified
-            if isinstance(vrange, int) or (
-                    isinstance(vrange, str) and (vrange.upper() == "MIN" or vrange.upper() == "MAX")):
-                command += f" {vrange}"
-            else:
-                raise exceptions.InvalidDeviceParameter
-
-            if not res == "auto":
-                if isinstance(res, int) or (isinstance(res, str) and (res.upper() == "MIN" or res.upper() == "MAX")):
-                    command += f",{res}"
-                else:
-                    raise exceptions.InvalidDeviceParameter
-
-        elif not res == "auto":
-            # if resolution is set, vrange MUST also be set
-            raise exceptions.InvalidDeviceParameter
+        ok, range_and_res = self._get_command_from_range_and_res(meas_range, res)
+        if ok:
+            command += range_and_res
         else:
-            # Both are auto
-            command += " AUTO"
+            return ret
 
         with self._lock:
-            # print(command)
             self.send_command(command)
             ret = float(self.receive_data())
 
@@ -183,3 +144,44 @@ class DMM(device.device, metaclass=abc.ABCMeta):
     def setLocal(self):
         print("setLocal ERROR NOT IMPLEMENTED")
         raise NotImplementedError
+
+    def _get_command_from_range_and_res(self, meas_range, res):
+        command = ""
+        ok = True
+
+        meas_range_auto = False
+        res_auto = False
+        match meas_range:
+            case self.CONST_AUTO:
+                meas_range_auto = True
+            case self.CONST_MAX:
+                command += " MAX"
+            case self.CONST_MIN:
+                command += " MIN"
+            case _:
+                if meas_range > 0:
+                    command += f" {meas_range}"
+                else:
+                    logger.error(f"Invalid use range: {meas_range} is not greater than 0 ")
+                    ok = False
+        match res:
+            case self.CONST_AUTO:
+                res_auto = True
+            case self.CONST_MAX:
+                command += ", MAX"
+            case self.CONST_MIN:
+                command += ", MIN"
+            case _:
+                if res > 0:
+                    command += f", {res}"
+                else:
+                    logger.error(f"Invalid use: resolution: {res} is not greater than 0 ")
+                    ok = False
+
+        if not res_auto and meas_range_auto:
+            logger.error("Invalid use: if resolution is set, range MUST also be set")
+            ok = False
+        if res_auto and meas_range_auto:
+            command += " AUTO"
+
+        return ok, command

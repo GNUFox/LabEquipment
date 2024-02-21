@@ -1,13 +1,18 @@
 from enum import IntEnum
 
-from labequipment.device.DMM import DMM
-from labequipment.device.DMM.DMM import acdc
+from labequipment.device.DMM.DMM import DMM
+from labequipment.device.DMM.DMM import acdc as dmm_acdc
 from labequipment.device.connection import USBTMCConnection, DummyConnection, XyphroUSBGPIBConfig
 import logging
 
 from labequipment.framework import exceptions
 
 logger = logging.getLogger('root')
+
+
+class acdc(dmm_acdc):
+    DC = 0
+    AC = 1
 
 
 class TriggerType(IntEnum):
@@ -17,12 +22,14 @@ class TriggerType(IntEnum):
     hold = 4
     synchronized = 5
 
+
 class Terminals(IntEnum):
     disconnect = 0
     front = 1
     rear_or_card = 2
 
-class HP3457A(DMM.DMM):
+
+class HP3457A(DMM):
     _expected_device_type = "HP3457A"
     _friendly_name = "HP 3457A Multimeter"
     # DCV 0.0000009,1 no
@@ -35,8 +42,6 @@ class HP3457A(DMM.DMM):
     res_max = 100
     nplc_min = 0
     nplc_max = 100
-
-    CONST_AUTO = -1
 
     _reset_after_connect: bool = False
 
@@ -69,23 +74,20 @@ class HP3457A(DMM.DMM):
                 if not self._ok:
                     logger.error("Connected but no answer")
 
-    def voltage(self, dc_ac='dc', vrange=CONST_AUTO, res=CONST_AUTO) -> float:
+    def voltage(self, ac_dc_mode: acdc = acdc.DC, meas_range: float | int = DMM.CONST_AUTO,
+                res: float | int = DMM.CONST_AUTO) -> float:
         """
         Simple voltage measurement (single trigger)
 
         NOTE: Not suitable for fast measurements
 
-        @param dc_ac:   AC / DC mode
-        @param vrange:  maximum voltge range
-        @param res:     resolution (% of vrange)
+        @param ac_dc_mode:   AC / DC mode
+        @param meas_range:   maximum voltge range
+        @param res:          resolution (% of vrange)
         @return:
         """
-        acdc_conf: acdc = acdc.DC
-        if dc_ac == 'dc':  # TODO: remove legacy (after fixing DMM)
-            acdc_conf = acdc.DC
-        elif dc_ac == 'ac':
-            acdc_conf = acdc.AC
-        self.configure_voltage(dc_ac=acdc_conf, vrange=vrange, res=res)
+
+        self.configure_voltage(ac_dc_mode=ac_dc_mode, meas_range=meas_range, res=res)
         self.configure_trigger(TriggerType.single)
         answer = self._connection.receive_data()
         ret: float = 0
@@ -95,33 +97,34 @@ class HP3457A(DMM.DMM):
             logger.error(f"Could not convert instrument reply to float: '{answer}'")
         return ret
 
-    def configure_voltage(self, dc_ac: acdc, vrange: float, res: float) -> None:
+    def configure_voltage(self, ac_dc_mode: acdc = acdc.DC, meas_range: float | int = DMM.CONST_AUTO,
+                          res: float | int = DMM.CONST_AUTO) -> None:
         """
         Configure instrument for voltage measurement
-        @param dc_ac:  AC / DC mode
-        @param vrange: maximum voltage range
-        @param res:    resolution (% of vrange)
+        @param ac_dc_mode:   AC / DC mode
+        @param meas_range:   maximum voltage range
+        @param res:          resolution (% of vrange)
         @return:
         """
         params_ok = True
-        if vrange != self.CONST_AUTO:
-            if not vrange >= self.vrange_min and vrange <= self.vrange_max:
+        if meas_range != self.CONST_AUTO:
+            if not meas_range >= self.vrange_min and meas_range <= self.vrange_max:
                 params_ok = False
         if res != self.CONST_AUTO:
             if not res >= self.res_min and res <= self.res_max:
                 params_ok = False
 
         if not params_ok:
-            logger.error(f"Device parameter error {vrange=} {res=}")
+            logger.error(f"Device parameter error {meas_range=} {res=}")
             return
 
         command_str: str = ""
-        if dc_ac == acdc.DC:
+        if ac_dc_mode == acdc.DC:
             command_str = "DCV"
-        elif dc_ac == acdc.AC:
+        elif ac_dc_mode == acdc.AC:
             command_str = "ACV"
-        if vrange != self.CONST_AUTO:
-            command_str += f"{vrange}"
+        if meas_range != self.CONST_AUTO:
+            command_str += f" {meas_range}"
         if res != self.CONST_AUTO:
             command_str += f",{res}"
 

@@ -22,16 +22,16 @@ def main():
     hp3457a.configure_terminals(Terminals.rear_or_card)
 
     print("### Quick Voltage measurement:", end='')
-    volt_a = hp3457a.voltage()
-    volt_b = hp34401a.voltage()
+    volt_a = hp3457a.voltage(meas_range=3)
+    volt_b = hp34401a.voltage(meas_range=3)
     print(f"{volt_a} {volt_b} - diff: {volt_b - volt_a}")
 
-    hp3457a.configure_voltage(dc_ac=acdc.DC, vrange=hp3457a.CONST_AUTO, res=hp3457a.CONST_AUTO)
+    hp3457a.configure_voltage(ac_dc_mode=acdc.DC, meas_range=3)
     hp3457a.configure_trigger(TriggerType.single)
     # TODO: implement hp34401a configure volt.
     voltages = []
-    for i in range(10):
-        voltages.append([float(hp3457a.single_trigger_and_get_value()), hp34401a.voltage()])
+    for i in range(50):
+        voltages.append([float(hp3457a.single_trigger_and_get_value()), hp34401a.voltage(meas_range=3)])
 
     print(voltages)
 
