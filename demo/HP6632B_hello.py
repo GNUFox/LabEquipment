@@ -6,7 +6,9 @@ from dotenv import load_dotenv
 import labequipment.framework.log
 from labequipment.device.PSU import HP6632B
 
-load_dotenv()
+if not load_dotenv():
+    raise ValueError(".env file not found")
+
 visa_res = os.getenv("HP_PSU_VISA_RES")
 
 

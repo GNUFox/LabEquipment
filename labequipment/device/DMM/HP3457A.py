@@ -96,14 +96,15 @@ class HP3457A(DMM):
         NOTE: Not suitable for fast measurements
 
         @param ac_dc_mode:   AC / DC mode
-        @param meas_range:   maximum voltge range
-        @param res:          resolution (% of vrange)
+        @param meas_range:   maximum voltage range
+        @param res:          resolution (% of range)
         @return:
         """
-
-        self.configure_voltage(ac_dc_mode=ac_dc_mode, meas_range=meas_range, res=res)
-        self.configure_trigger(TriggerType.single)
-        answer = self.receive_data()
+        answer: str = ""
+        with self._lock:
+            self.configure_voltage(ac_dc_mode=ac_dc_mode, meas_range=meas_range, res=res)
+            self.configure_trigger(TriggerType.single)
+            answer = self.receive_data()
         ret: float = 0
         try:
             ret = float(answer)
@@ -112,7 +113,7 @@ class HP3457A(DMM):
         return ret
 
     def configure_voltage(self, ac_dc_mode: acdc = acdc.DC, meas_range: float | int = DMM.CONST_AUTO,
-                          res: float | int = DMM.CONST_AUTO) -> None:
+                          res: float | int = DMM.CONST_AUTO):
         """
         Configure instrument for voltage measurement
         @param ac_dc_mode:   AC / DC mode
@@ -146,10 +147,22 @@ class HP3457A(DMM):
             self.send_command(command_str)
 
     def current(self, ac_dc_mode: acdc = acdc.DC, meas_range: float | int = DMM.CONST_AUTO,
-                res: float | int = DMM.CONST_AUTO):
-        self.configure_current(ac_dc_mode=ac_dc_mode, meas_range=meas_range, res=res)
-        self.configure_trigger(TriggerType.single)
-        answer = self.receive_data()
+                res: float | int = DMM.CONST_AUTO) -> float:
+        """
+        Simple current measurement (single trigger)
+
+        NOTE: Not suitable for fast measurements
+
+        @param ac_dc_mode:   AC / DC mode
+        @param meas_range:   maximum current range
+        @param res:          resolution (% of range)
+        @return:
+        """
+        answer: str = ""
+        with self._lock:
+            self.configure_current(ac_dc_mode=ac_dc_mode, meas_range=meas_range, res=res)
+            self.configure_trigger(TriggerType.single)
+            answer = self.receive_data()
         ret: float = 0
         try:
             ret = float(answer)
@@ -191,18 +204,35 @@ class HP3457A(DMM):
         with self._lock:
             self.send_command(command_str)
 
-    def configure_trigger(self, trigger: TriggerType) -> None:
-        with self._lock:  # TODO check locking design (deadlock / functions unable to use)
+    def configure_trigger(self, trigger: TriggerType):
+        """
+        Configure Trigger type
+        :param trigger:  see TriggerType-enum
+        :return:
+        """
+        with self._lock:
             self.send_command(f"TRIG {trigger.value}")
 
     def single_trigger_and_get_value(self) -> str:
-        self.configure_trigger(TriggerType.single)
-        return self.receive_data()
+        """
+        Switch to Trigger type "single" which triggers a measurement
+        :return:  answer from the instrument as a string (needs to be parsed / converted for further processing)
+        """
+        answer: str = ""
+        with self._lock:
+            self.configure_trigger(TriggerType.single)
+            answer = self.receive_data()
+        return answer
 
     def tone(self, freq: int, dur: int):
         self.send_command(f"TONE {freq},{dur}")
 
     def configure_nplc(self, nplc: float):
+        """
+        Confgure NPLC (Number of Powerline cycles) for measurements
+        :param nplc: float: [ 0 - 100 ]
+        :return:
+        """
         if not nplc >= self.nplc_min and nplc <= self.nplc_max:
             logger.error(f"NPLC {nplc} outside of range [{self.nplc_min} {self.nplc_max}")
             return
@@ -210,10 +240,22 @@ class HP3457A(DMM):
             self.send_command(f"NPLC {nplc}")
 
     def configure_terminals(self, terminals: Terminals):
+        """
+        Select terminal sor add-in card
+        :param terminals:  see Terminals-enum
+        :return:
+        """
         with self._lock:
             self._connection.send_command(f"TERM {terminals.value}")
 
     def get_error_codes(self) -> list[ErrorCodes] | None:
+        """
+        Get the error codes from the instrument
+        See Manual page 194 (section 4-52 Command reference)
+        Quick reference: page 16 "ERR?"
+
+        :return: list[ErrorCodes] or None
+        """
         err_str: str | None = None
         with self._lock:
             self.send_command("ERR?")

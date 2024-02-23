@@ -1,5 +1,4 @@
 import os
-import sys
 import time
 
 from dotenv import load_dotenv
@@ -9,7 +8,9 @@ from labequipment.device.DMM.HP3457A import HP3457A, acdc, TriggerType, Terminal
 from labequipment.device.DMM.HP34401A import HP34401A
 from labequipment.device.PSU.HP6632B import HP6632B
 
-load_dotenv()
+if not load_dotenv():
+    raise ValueError(".env file not found")
+
 visa_res_hp3457a = os.getenv("HP3457A_VISA_RES")
 visa_res_hp34401a = os.getenv("HP34401A_VISA_RES")
 visa_res_hp6632b = os.getenv("HP_PSU_VISA_RES")

@@ -7,7 +7,9 @@ from dotenv import load_dotenv
 import labequipment.framework.log
 from labequipment.device.DMM.HP3457A import HP3457A, acdc, TriggerType
 
-load_dotenv()
+if not load_dotenv():
+    raise ValueError(".env file not found")
+
 visa_res = os.getenv("HP3457A_VISA_RES")
 
 

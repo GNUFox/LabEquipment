@@ -3,14 +3,14 @@ from abc import abstractmethod
 
 from labequipment.device.connection import Connection
 
-import threading
+from threading import RLock
 import logging
 
 logger = logging.getLogger('root')
 
 
 class device(metaclass=abc.ABCMeta):
-    _lock: threading.Lock
+    _lock: RLock
     _ok: bool  # Set to True after the device is connected properly
     _expected_device_type: str = NotImplemented
     _friendly_name: str = "Friendly name n/a"
@@ -20,7 +20,7 @@ class device(metaclass=abc.ABCMeta):
 
     @abstractmethod
     def __init__(self):
-        self._lock = threading.Lock()
+        self._lock = RLock()
         self._ok = False
         self._is_dummy_dev = False
 

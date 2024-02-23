@@ -1,4 +1,3 @@
-import copy
 import os
 import time
 
@@ -6,7 +5,8 @@ from dotenv import load_dotenv
 
 from labequipment.device.SWITCH import HP894A
 
-load_dotenv()
+if not load_dotenv():
+    raise ValueError(".env file not found")
 
 visa_res = os.getenv("HP_SWITCH_VISA_RES")
 

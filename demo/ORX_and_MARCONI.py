@@ -8,7 +8,8 @@ from labequipment.device.AWG.ORX_402A import Waveforms
 from labequipment.device.AWG.MARCONI_2019 import ModFrequencies
 import labequipment.framework.log
 
-load_dotenv()
+if not load_dotenv():
+    raise ValueError(".env file not found")
 
 marconi_visa_res = os.getenv("MARCONI_VISA_RES")
 orx_visa_res = os.getenv("ORX_VISA_RES")

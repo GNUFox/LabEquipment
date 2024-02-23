@@ -6,7 +6,8 @@ from labequipment.device.AWG import MARCONI_2019
 from labequipment.device.AWG.MARCONI_2019 import ModFrequencies
 import labequipment.framework.log
 
-load_dotenv()
+if not load_dotenv():
+    raise ValueError(".env file not found")
 
 default_carrier_freq = 433.525E6
 default_fm_dev = 2.5E3

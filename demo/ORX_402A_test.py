@@ -7,7 +7,8 @@ import labequipment.framework.log
 from labequipment.device.AWG import ORX_402A
 from labequipment.device.AWG.ORX_402A import Waveforms
 
-load_dotenv()
+if not load_dotenv():
+    raise ValueError(".env file not found")
 
 visa_res = os.getenv("ORX_VISA_RES")
 

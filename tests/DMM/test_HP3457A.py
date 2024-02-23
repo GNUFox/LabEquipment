@@ -5,7 +5,8 @@ import labequipment.framework.log
 from labequipment.device.DMM import HP3457A
 from labequipment.device.DMM.HP3457A import TriggerType, Terminals, acdc, ErrorCodes
 
-load_dotenv()
+if not load_dotenv():
+    raise ValueError(".env file not found")
 
 visa_res = os.getenv("HP3457A_VISA_RES")
 
@@ -52,6 +53,10 @@ class TestHP3457A_HARDWARE(TestHP3457A):
         errors = self.dmm.get_error_codes()
         self.assertEqual(errors, [ErrorCodes.PARAM_RANGE])
 
+        self.dmm.send_command("DCV ,999")
+        errors = self.dmm.get_error_codes()
+        self.assertEqual(errors, [ErrorCodes.PARAM_RANGE])  # TODO: FIX!!!
+
         self.dmm.send_command("DCV 10,10,10")
         errors = self.dmm.get_error_codes()
         self.assertEqual(errors, [ErrorCodes.PARAM_IGNORED])
@@ -61,9 +66,7 @@ class TestHP3457A_HARDWARE(TestHP3457A):
             self.dmm.single_trigger_and_get_value()
 
         errors = self.dmm.get_error_codes()
-        self.assertEqual(errors, [ErrorCodes.PARAM_IGNORED])
-
-
+        self.assertEqual(errors, [ErrorCodes.PARAM_IGNORED])  # TODO: FIX!!!
 
 
 class TestSetCommands(TestHP3457A_DUMMY):
@@ -87,9 +90,6 @@ class TestSetCommands(TestHP3457A_DUMMY):
         for term, expected in terminals.items():
             self.dmm.configure_terminals(term)
             self.assertEqual(self.dmm._connection.get_last_command(), expected)
-
-    def test_tone(self):
-        self.fail()
 
     def test_configure_nplc(self):
         self.dmm.configure_nplc(1)
