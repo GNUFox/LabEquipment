@@ -100,6 +100,10 @@ class MARCONI_2019(AWG.AWG):
     Instrument does not behave as described in the manual.
     Can not set some parameters (RF Level) and then enable output. Setting RF Level automatically enables output.
     """
+
+    _expected_device_type = None  # Device does not identify itself (ni ID command)
+    _friendly_name = "MARCONI INSTRUMENTS signal generator 2019"
+
     freq_min = 80E3  # minimum frequency in kHz
     freq_max = 1040000E3  # maximum frequency in kHz
     ampl_v_min = 0.1E-6  # minimum amplitude in V

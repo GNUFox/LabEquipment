@@ -11,6 +11,7 @@ logger = logging.getLogger('root')
 
 class HP8954A(device.device):
     _expected_device_type = "8954A"
+    _friendly_name = "HP 8954A Transceiver Interface"
 
     class RFMon(IntEnum):
         Mon1 = 1

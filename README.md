@@ -4,7 +4,7 @@ My attempt at creating an easy-to-use Python module for interaction with Test an
 The devices can be connected by different means ((usb)serial, telnet, USB-to-GPIB-adaptors)
 
 This project is just done for fun and does not claim full coverage of the operating modes/instructions of all supported instruments.
-Hence, devices in the "supported devices" support at least the basic commands (Example: frequency, offset, amplitude and waveform of an AWG).
+Hence, devices in the "supported devices" section support at least the basic commands (Example: frequency, offset, amplitude and waveform of an AWG).
 
 
 ## Supported devices
@@ -16,6 +16,8 @@ Hence, devices in the "supported devices" support at least the basic commands (E
 ### Building in progress
 * HP3457A DMM
 * HP34401A DMM
+
+### Future support
 * Wavetek 4032 Stabilock Communication tester
 * MARCONI INSTRUMENTS modulation meter 2305
 

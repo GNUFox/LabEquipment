@@ -12,6 +12,7 @@ import logging
 logger = logging.getLogger('root')
 
 
+# noinspection SpellCheckingInspection
 class XyphroUSBGPIBConfig(Enum):
     GET_VER = '!ver?'
     SET_READ_TERM_CR = '!term cr'
@@ -32,7 +33,7 @@ class XyphroUSBGPIBConfig(Enum):
 
 
 # TODO: implement visa stuff? find library??
-# TODO: maybe implement data parsing / conversion in parent class because all subclasse smight need that
+# TODO: maybe implement data parsing / conversion in parent class because all subclasses might need that
 class Connection(metaclass=ABCMeta):
     connection_ok: bool
 
@@ -267,7 +268,7 @@ class PrologixUSBAdaptor(SerialConnection):
     def __init__(self, tty_device: str = ""):
         self._tty_device = tty_device
 
-        # TODO: set paramterse correctly for prologix (or check if they can be omitted (usbserial auto??)
+        # TODO: set parameters correctly for PROLOGIX (or check if they can be omitted (usbserial auto??)
         tty_connection = serial.Serial()
         tty_connection.baudrate = 9600
         tty_connection.timeout = 1
@@ -289,7 +290,7 @@ class PrologixUSBConnection(Connection):
     """
     Establish a connection to the device using the PROLOGIX USB to GPIB Adaptor
     """
-    # TODO: when using prologix there can only be as many instances as there are adaptors + needs to be global?
+    # TODO: when using PROLOGIX there can only be as many instances as there are adaptors + needs to be global?
 
     gpib_address: int
     _destination = ""

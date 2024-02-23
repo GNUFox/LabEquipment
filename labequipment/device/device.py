@@ -39,7 +39,12 @@ class device(metaclass=abc.ABCMeta):
             self._connection.disconnect()
 
     def _check_device_type(self, answer, expected):
-        """check whether the device type (\'answer\') is what is being expected (\'expected\')"""
+        """
+        check whether the device type is what is being expected
+        :param answer:    answer returned by the instrument
+        :param expected:  expected answer (device type)
+        :return:   True: if ok, False: if not ok
+        """
         if self._is_dummy_dev:
             return True
         if not answer == expected:
