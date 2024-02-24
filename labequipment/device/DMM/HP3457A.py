@@ -204,6 +204,46 @@ class HP3457A(DMM):
         with self._lock:
             self.send_command(command_str)
 
+    def configure_impedance(self, fixed: bool):
+        with self._lock:
+            self.send_command(f"FIXEDZ {1 if fixed else 0}")
+
+    def get_impedance_fixed(self):
+        fixed = False
+        with self._lock:
+            self.send_command("FIXEDZ?")
+            answer = self.receive_data()
+            try:
+                i = int(answer.split('.')[0])
+                if i == 1:
+                    fixed = True
+                elif i == 0:
+                    fixed = False
+                else:
+                    logger.error(f"Unexpected value {i}")
+            except ValueError:
+                logger.error("Could not convert {}")
+
+        return fixed
+
+    def diode(self):
+        raise NotImplementedError
+
+    def frequency(self):
+        raise NotImplementedError  # TODO: implement
+
+    def fResistance(self):
+        raise NotImplementedError
+
+    def period(self):
+        raise NotImplementedError   # TODO: implement
+
+    def resistance(self):
+        raise NotImplementedError  # TODO: implement
+
+    def temperature(self):
+        raise NotImplementedError
+
     def configure_trigger(self, trigger: TriggerType):
         """
         Configure Trigger type
@@ -233,11 +273,45 @@ class HP3457A(DMM):
         :param nplc: float: [ 0 - 100 ]
         :return:
         """
+        # TODO: allow only specific NPLC values (see manual)
         if not nplc >= self.nplc_min and nplc <= self.nplc_max:
             logger.error(f"NPLC {nplc} outside of range [{self.nplc_min} {self.nplc_max}")
             return
+
+        if nplc > 0.005:
+            match nplc:
+                case 0.005:
+                    pass
+                case 0.1:
+                    pass
+                case 1:
+                    pass
+                case 10:
+                    pass
+                case 100:
+                    pass
+                case _:
+                    logger.error("NPLC needs to be <=0.005 0.005, 0.1, 1, 10 or 100")
+                    return
         with self._lock:
             self.send_command(f"NPLC {nplc}")
+
+    def get_nplc(self) -> float:
+        raise NotImplementedError
+
+    def get_nplc_from_device(self) -> float:
+        nplc: float = 0
+        answer: str = ""
+        with self._lock:
+            self.send_command("NPLC?")
+            answer = self.receive_data()
+            if answer:
+                try:
+                    nplc = float(answer)
+                except ValueError:
+                    logger.error(f"Could not convert answer {answer} to float")
+
+        return nplc
 
     def configure_terminals(self, terminals: Terminals):
         """

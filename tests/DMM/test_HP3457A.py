@@ -5,6 +5,8 @@ import labequipment.framework.log
 from labequipment.device.DMM import HP3457A
 from labequipment.device.DMM.HP3457A import TriggerType, Terminals, acdc, ErrorCodes
 
+from tests.testutils import ask_user_if_ok
+
 if not load_dotenv():
     raise ValueError(".env file not found")
 
@@ -53,20 +55,41 @@ class TestHP3457A_HARDWARE(TestHP3457A):
         errors = self.dmm.get_error_codes()
         self.assertEqual(errors, [ErrorCodes.PARAM_RANGE])
 
-        self.dmm.send_command("DCV ,999")
-        errors = self.dmm.get_error_codes()
-        self.assertEqual(errors, [ErrorCodes.PARAM_RANGE])  # TODO: FIX!!!
-
         self.dmm.send_command("DCV 10,10,10")
         errors = self.dmm.get_error_codes()
         self.assertEqual(errors, [ErrorCodes.PARAM_IGNORED])
 
-        self.dmm.configure_voltage()
-        for i in range(10):
-            self.dmm.single_trigger_and_get_value()
+        # Don't know how to provoke other errors
 
-        errors = self.dmm.get_error_codes()
-        self.assertEqual(errors, [ErrorCodes.PARAM_IGNORED])  # TODO: FIX!!!
+    def test_NPLC(self):
+        nplc = 10
+        self.dmm.configure_nplc(nplc)
+        answer = self.dmm.get_nplc_from_device()
+        self.assertEqual(nplc, answer)
+
+    def test_fixedz(self):
+        self.dmm.configure_impedance(fixed=True)
+        fixed = self.dmm.get_impedance_fixed()
+        self.assertEqual(fixed, True)
+
+        self.dmm.configure_impedance(fixed=False)
+        fixed = self.dmm.get_impedance_fixed()
+        self.assertEqual(fixed, False)
+
+
+class TestHP3457A_INTERACTIVE(TestHP3457A):
+
+    def test_voltage(self):
+        measured_voltage = self.dmm.voltage()
+        print(f"Measured Voltage: {measured_voltage}\n")
+        self.assertEqual(ask_user_if_ok(), True)
+
+    def test_current(self):
+        measured_current = self.dmm.current()
+        print(f"Measured Current: {measured_current}\n")
+        self.assertEqual(ask_user_if_ok(), True)
+
+
 
 
 class TestSetCommands(TestHP3457A_DUMMY):

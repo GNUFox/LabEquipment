@@ -408,8 +408,6 @@ class ORX_402A(AWG.AWG):
         :return:  True:  everything worked, instrument is ready for use
                   False: errors occured, instrument is not ready for use
         """
-        if not self._lock.locked():
-            return False
 
         self.send_command("?*")
         reply = self.receive_data()
