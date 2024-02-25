@@ -59,6 +59,8 @@ class HP3457A(DMM):
     vrange_min = 1E-6
     curr_range_max = 1.5
     curr_range_min = 300E-6
+    resistance_min = 0
+    resistance_max = 3E9
     res_min = 1
     res_max = 100
     nplc_min = 0
@@ -249,8 +251,11 @@ class HP3457A(DMM):
                 freq = float(answer)
             except ValueError:
                 logger.error(f"Could not convert {answer} to float")
+        else:
+            pass
+            # TODO: error
 
-        return answer
+        return freq
 
     def configure_frequency(self, max_input: float = DMM.CONST_AUTO, fsource: Fsource = Fsource.ACV):
         if max_input != max_input:
@@ -262,17 +267,84 @@ class HP3457A(DMM):
                     return
 
         with self._lock:
-            self.send_command(f"FREQ {max_input if max_input != DMM.CONST_AUTO else ''}")
             self.send_command(f"FSOURCE {fsource.value}")
+            self.send_command(f"FREQ {max_input if max_input != DMM.CONST_AUTO else ''}")
 
     def fResistance(self):
         raise NotImplementedError
 
-    def period(self):
-        raise NotImplementedError   # TODO: implement
+    def period(self, max_input: float = DMM.CONST_AUTO, fsource: Fsource = Fsource.ACV):
+        answer: str = ""
+        per: float = 0
+        with self._lock:
+            self.configure_period(max_input=max_input, fsource=fsource)
+            self.configure_trigger(TriggerType.single)
+            answer = self.receive_data()
 
-    def resistance(self):
-        raise NotImplementedError  # TODO: implement
+        if answer:
+            try:
+                per = float(answer)
+            except ValueError:
+                logger.error(f"Could not convert {answer} to float")
+        else:
+            pass
+            # TODO: error
+
+        return per
+
+    def configure_period(self, max_input: float = DMM.CONST_AUTO, fsource: Fsource  = Fsource.ACV):
+        if max_input != max_input:
+            if fsource in [Fsource.ACV, Fsource.ACDCV]:
+                if not self._check_voltage_in_range_ok(max_input):
+                    return
+            elif fsource in [Fsource.ACI, Fsource.ACDCI]:
+                if not self._check_current_in_range_ok(max_input):
+                    return
+
+        with self._lock:
+            self.send_command(f"FSOURCE {fsource.value}")
+            self.send_command(f"PER {max_input}")
+
+    def resistance(self, meas_range: float = DMM.CONST_AUTO, res: float = DMM.CONST_AUTO, four_wire: bool = False):
+        answer: str = ""
+        with self._lock:
+            self.configure_resistance(meas_range=meas_range, res=res, four_wire=four_wire)
+            self.configure_trigger(TriggerType.single)
+            answer = self.receive_data()
+        ret: float = 0
+        try:
+            ret = float(answer)
+        except ValueError:
+            logger.error(f"Could not convert instrument reply to float: '{answer}'")
+        return ret
+
+    def configure_resistance(self, meas_range: float = DMM.CONST_AUTO, res: float = DMM.CONST_AUTO,
+                             four_wire: bool = False):
+        params_ok = True
+        if meas_range != self.CONST_AUTO:
+            if not self._check_resistance_in_range_ok(meas_range):
+                params_ok = False
+        if res != self.CONST_AUTO:
+            if not self._check_resolution_in_range_ok(res):
+                params_ok = False
+
+        if not params_ok:
+            logger.error(f"Device parameter error {meas_range=} {res=}")
+            return
+
+        command_str: str = ""
+        if four_wire:
+            command_str = "OHMF"
+        else:
+            command_str = "OHM"
+
+        if meas_range != self.CONST_AUTO:
+            command_str += f" {meas_range}"
+        if res != self.CONST_AUTO:
+            command_str += f",{res}"
+
+        with self._lock:
+            self.send_command(command_str)
 
     def temperature(self):
         raise NotImplementedError
@@ -398,5 +470,10 @@ class HP3457A(DMM):
 
     def _check_resolution_in_range_ok(self, res: float) -> bool:
         if not (self.res_min <= res <= self.res_max):
+            return False
+        return True
+
+    def _check_resistance_in_range_ok(self, resistance: float) -> bool:
+        if not (self.resistance_min <= resistance <= self.resistance_max):
             return False
         return True

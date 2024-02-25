@@ -91,7 +91,17 @@ class TestHP3457A_INTERACTIVE(TestHP3457A):
 
     def test_frequency(self):
         freq = self.dmm.frequency()
-        print(f"Measured Frequency: {freq}\n")
+        print(f"Measured Frequency: {freq} Hz\n")
+        self.assertEqual(ask_user_if_ok(), True)
+
+    def test_period(self):
+        per = self.dmm.period()
+        print(f"Measured Period: {per} s\n")
+        self.assertEqual(ask_user_if_ok(), True)
+
+    def test_resistance(self):
+        res = self.dmm.resistance()
+        print(f"Measured resistance: {res} Ohms\n")
         self.assertEqual(ask_user_if_ok(), True)
 
 

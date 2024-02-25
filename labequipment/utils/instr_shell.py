@@ -26,6 +26,8 @@ class MyParser(argparse.ArgumentParser):
         print("xyph,<XYPHRO COMMAND>      Send a configuration command to the xyphro UsbGpib adaptor")
         print("                           <XYPHRO COMMAND> must be given")
         print("                           See https://github.com/xyphro/UsbGpib?tab=readme-ov-file#setting-parameters")
+        print("quit")
+        print("exit                       Exit the shell")
         print("\n")
         print("Example instrument interaction:\n")
         print("HOST: r*IDN?")
@@ -97,7 +99,7 @@ if __name__ == "__main__":
             user_in = input('HOST: ')
         except EOFError:
             break
-        if user_in.lower() == "exit":
+        if user_in.lower() in ["exit", "quit"]:
             break
         if user_in.lower() == "reconnect":
             instr.disconnect()
