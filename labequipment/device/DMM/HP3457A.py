@@ -29,6 +29,13 @@ class Terminals(IntEnum):
     rear_or_card = 2
 
 
+class Fsource(IntEnum):
+    ACV = 2
+    ACDCV = 3
+    ACI = 7
+    ACDCI = 8
+
+
 class ErrorCodes(Enum):
     HARDWARE = "Hardware Error"                    # 1
     CALIBRATION = "CAL or ACAL error"              # 3
@@ -123,10 +130,10 @@ class HP3457A(DMM):
         """
         params_ok = True
         if meas_range != self.CONST_AUTO:
-            if not meas_range >= self.vrange_min and meas_range <= self.vrange_max:
+            if not self._check_voltage_in_range_ok(meas_range):
                 params_ok = False
         if res != self.CONST_AUTO:
-            if not res >= self.res_min and res <= self.res_max:
+            if not self._check_resolution_in_range_ok(res):
                 params_ok = False
 
         if not params_ok:
@@ -181,10 +188,10 @@ class HP3457A(DMM):
         """
         params_ok = True
         if meas_range != self.CONST_AUTO:
-            if not meas_range >= self.curr_range_min and meas_range <= self.curr_range_max:
+            if not self._check_current_in_range_ok(meas_range):
                 params_ok = False
         if res != self.CONST_AUTO:
-            if not res >= self.res_min and res <= self.res_max:
+            if not self._check_resolution_in_range_ok(res):
                 params_ok = False
 
         if not params_ok:
@@ -229,8 +236,34 @@ class HP3457A(DMM):
     def diode(self):
         raise NotImplementedError
 
-    def frequency(self):
-        raise NotImplementedError  # TODO: implement
+    def frequency(self, max_input: float = DMM.CONST_AUTO, fsource: Fsource = Fsource.ACV):
+        answer: str = ""
+        freq: float = 0
+        with self._lock:
+            self.configure_frequency(max_input=max_input, fsource=fsource)
+            self.configure_trigger(TriggerType.single)
+            answer = self.receive_data()
+
+        if answer:
+            try:
+                freq = float(answer)
+            except ValueError:
+                logger.error(f"Could not convert {answer} to float")
+
+        return answer
+
+    def configure_frequency(self, max_input: float = DMM.CONST_AUTO, fsource: Fsource = Fsource.ACV):
+        if max_input != max_input:
+            if fsource in [Fsource.ACV, Fsource.ACDCV]:
+                if not self._check_voltage_in_range_ok(max_input):
+                    return
+            elif fsource in [Fsource.ACI, Fsource.ACDCI]:
+                if not self._check_current_in_range_ok(max_input):
+                    return
+
+        with self._lock:
+            self.send_command(f"FREQ {max_input if max_input != DMM.CONST_AUTO else ''}")
+            self.send_command(f"FSOURCE {fsource.value}")
 
     def fResistance(self):
         raise NotImplementedError
@@ -352,3 +385,18 @@ class HP3457A(DMM):
             return errors
         else:
             return None
+
+    def _check_voltage_in_range_ok(self, volt: float) -> bool:
+        if not (self.vrange_min <= volt <= self.vrange_max):
+            return False
+        return True
+
+    def _check_current_in_range_ok(self, curr: float) -> bool:
+        if not (self.curr_range_min <= curr <= self.curr_range_max):
+            return False
+        return True
+
+    def _check_resolution_in_range_ok(self, res: float) -> bool:
+        if not (self.res_min <= res <= self.res_max):
+            return False
+        return True

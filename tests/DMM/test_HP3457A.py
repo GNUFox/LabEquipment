@@ -23,7 +23,7 @@ for e in Terminals:
 
 class TestHP3457A(TestCase):
     def setUp(self):
-        self.dmm = HP3457A.HP3457A(visa_resource=visa_res)
+        self.dmm = HP3457A.HP3457A(visa_resource=visa_res, reset_after_connect=True)
         self.dmm.connect()
         self.assertEqual(self.dmm.get_ok(), True)
 
@@ -89,7 +89,10 @@ class TestHP3457A_INTERACTIVE(TestHP3457A):
         print(f"Measured Current: {measured_current}\n")
         self.assertEqual(ask_user_if_ok(), True)
 
-
+    def test_frequency(self):
+        freq = self.dmm.frequency()
+        print(f"Measured Frequency: {freq}\n")
+        self.assertEqual(ask_user_if_ok(), True)
 
 
 class TestSetCommands(TestHP3457A_DUMMY):
@@ -101,8 +104,23 @@ class TestSetCommands(TestHP3457A_DUMMY):
     def test_configure_voltage(self):
         self.dmm.configure_voltage(ac_dc_mode=acdc.DC, meas_range=self.dmm.CONST_AUTO, res=self.dmm.CONST_AUTO)
         self.dmm.configure_voltage(ac_dc_mode=acdc.DC, meas_range=10, res=1)
+        self.dmm.configure_voltage(ac_dc_mode=acdc.DC, meas_range=1000, res=1)
+        self.dmm.configure_voltage(ac_dc_mode=acdc.DC, meas_range=10, res=120)
         commands = self.dmm._connection.get_last_commands_list()
         self.assertEqual(commands, ["DCV", "DCV 10,1"])
+
+    def test_current(self):
+        self.dmm.current()
+        sent_commands = self.dmm._connection.get_last_commands_list()
+        self.assertEqual(sent_commands, ["DCI", "TRIG 3"])
+
+    def test_configure_current(self):
+        self.dmm.configure_current(ac_dc_mode=acdc.DC, meas_range=self.dmm.CONST_AUTO, res=self.dmm.CONST_AUTO)
+        self.dmm.configure_current(ac_dc_mode=acdc.DC, meas_range=1.5, res=1)
+        self.dmm.configure_current(ac_dc_mode=acdc.DC, meas_range=1000, res=1)
+        self.dmm.configure_current(ac_dc_mode=acdc.DC, meas_range=10, res=120)
+        commands = self.dmm._connection.get_last_commands_list()
+        self.assertEqual(commands, ["DCI", "DCI 1.5,1"])
 
     def test_configure_trigger(self):
         for trigger, expected in triggers.items():
