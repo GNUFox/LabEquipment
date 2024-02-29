@@ -1,11 +1,12 @@
 import os
 from unittest import TestCase
 from dotenv import load_dotenv
-import labequipment.framework.log
+
 from labequipment.device.DMM import HP3457A
 from labequipment.device.DMM.HP3457A import TriggerType, Terminals, acdc, ErrorCodes
-
 from tests.testutils import ask_user_if_ok
+from labequipment.framework.log import setup_custom_logger
+setup_custom_logger()
 
 if not load_dotenv():
     raise ValueError(".env file not found")
@@ -40,7 +41,7 @@ class TestHP3457A_HARDWARE(TestHP3457A):
 
     def test_error_codes(self):
         """
-        Deliberatly send wrong commands / cause errors to happen to check error code retrieval
+        Deliberately send wrong commands / cause errors to happen to check error code retrieval
         :return:
         """
         self.dmm.send_command("jfölksafkjs")

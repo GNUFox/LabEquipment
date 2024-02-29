@@ -4,7 +4,8 @@ from dotenv import load_dotenv
 
 from labequipment.device.AWG import MARCONI_2019
 from labequipment.device.AWG.MARCONI_2019 import ModFrequencies
-import labequipment.framework.log
+from labequipment.framework.log import setup_custom_logger
+setup_custom_logger()
 
 if not load_dotenv():
     raise ValueError(".env file not found")

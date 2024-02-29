@@ -1,11 +1,11 @@
 import time
 from enum import Enum
 from math import trunc
+import threading
 
 from labequipment.device.connection import USBTMCConnection, DummyConnection
 from labequipment.device.AWG import AWG
 
-import threading
 import logging
 
 logger = logging.getLogger('root')

@@ -2,7 +2,7 @@ import logging
 from labequipment.framework.globals import GlobalDefaults
 
 
-def setup_custom_logger(name, stdout_level=logging.DEBUG, file_level=logging.DEBUG):
+def setup_custom_logger(name='root', stdout_level=logging.DEBUG, file_level=logging.DEBUG):
     logger = logging.getLogger(name)
     formatter = logging.Formatter(fmt='%(asctime)s - %(levelname)s - [%(module)s] %(message)s')
     logger.setLevel(logging.DEBUG)
@@ -21,6 +21,6 @@ def setup_custom_logger(name, stdout_level=logging.DEBUG, file_level=logging.DEB
     return logger
 
 
-setup_custom_logger('root',
-                    stdout_level=GlobalDefaults.stdout_loglevel,
-                    file_level=GlobalDefaults.file_loglevel)
+# setup_custom_logger('root',
+#                     stdout_level=GlobalDefaults.stdout_loglevel,
+#                     file_level=GlobalDefaults.file_loglevel)

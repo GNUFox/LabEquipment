@@ -5,8 +5,6 @@ from labequipment.device.DMM.DMM import acdc as dmm_acdc
 from labequipment.device.connection import USBTMCConnection, DummyConnection, XyphroUSBGPIBConfig
 import logging
 
-from labequipment.framework import exceptions
-
 logger = logging.getLogger('root')
 
 
@@ -47,7 +45,7 @@ class ErrorCodes(Enum):
     PARAM_MISSING = "Required parameter missing"   # 128
     PARAM_IGNORED = "Parameter ignored"            # 256
     OUT_OF_CAL = "Out of calibration"              # 512
-    AUTOCAL_REQ = "Autocalibration required"       # 1024
+    AUTOCAL_REQ = "Auto calibration required"      # 1024
 
 
 class HP3457A(DMM):
@@ -231,7 +229,7 @@ class HP3457A(DMM):
                 else:
                     logger.error(f"Unexpected value {i}")
             except ValueError:
-                logger.error("Could not convert {}")
+                logger.error(f"Could not convert {answer}")
 
         return fixed
 
@@ -292,7 +290,7 @@ class HP3457A(DMM):
 
         return per
 
-    def configure_period(self, max_input: float = DMM.CONST_AUTO, fsource: Fsource  = Fsource.ACV):
+    def configure_period(self, max_input: float = DMM.CONST_AUTO, fsource: Fsource = Fsource.ACV):
         if max_input != max_input:
             if fsource in [Fsource.ACV, Fsource.ACDCV]:
                 if not self._check_voltage_in_range_ok(max_input):
@@ -374,7 +372,7 @@ class HP3457A(DMM):
 
     def configure_nplc(self, nplc: float):
         """
-        Confgure NPLC (Number of Powerline cycles) for measurements
+        Configure NPLC (Number of Powerline cycles) for measurements
         :param nplc: float: [ 0 - 100 ]
         :return:
         """

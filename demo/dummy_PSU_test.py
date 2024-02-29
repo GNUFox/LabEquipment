@@ -1,6 +1,10 @@
 import time
 from labequipment.device.PSU import dummyPSU
 
+from labequipment.framework.log import setup_custom_logger
+
+setup_custom_logger()
+
 
 def test():
     psu = dummyPSU.dummyPSU(output_states=[0, 0, 0],

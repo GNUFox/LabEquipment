@@ -1,11 +1,8 @@
 from enum import IntEnum, Enum
+from math import trunc
 
 from labequipment.device.connection import USBTMCConnection, DummyConnection
-import labequipment.framework.log
-
 from labequipment.device.AWG import AWG
-
-from math import trunc
 
 import logging
 

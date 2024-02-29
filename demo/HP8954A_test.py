@@ -4,11 +4,13 @@ import time
 from dotenv import load_dotenv
 
 from labequipment.device.SWITCH import HP894A
+from labequipment.framework.log import setup_custom_logger
+setup_custom_logger()
 
 if not load_dotenv():
     raise ValueError(".env file not found")
 
-visa_res = os.getenv("HP_SWITCH_VISA_RES")
+visa_res = os.getenv("HP8954A_VISA_RES_VISA_RES")
 
 
 def rx_tx_test():

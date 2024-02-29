@@ -1,4 +1,4 @@
-from labequipment.device.connection import USBTMCConnection, SerialConnection, DummyConnection
+from labequipment.device.connection import USBTMCConnection, DummyConnection
 
 from labequipment.device.PSU import PSU
 from labequipment.framework import exceptions
@@ -13,6 +13,10 @@ class HP6632B(PSU.PSU):
 
     _display_mode_normal: bool
     _display_char_max = 14
+
+    _set_voltage: float = 0
+    _set_current: float = 0
+    _output_state: bool = False
 
     def __init__(self, visa_resource: str = "", serial_dev: str = ""):
         """Set up a connection to an HP 6632B PSU using USBTMC (USB to GPIB converter)"""
@@ -73,6 +77,7 @@ class HP6632B(PSU.PSU):
         """
         with self._lock:
             self.send_command(f"VOLT {voltage}")
+            self._set_voltage = voltage
 
     def get_measured_voltage(self, output_nr=0) -> float:
         """
@@ -99,6 +104,7 @@ class HP6632B(PSU.PSU):
         """
         with self._lock:
             self.send_command(f"CURR {current}")
+            self._set_current = current
 
     def get_measured_current(self, output_nr=0) -> float:
         """
@@ -144,6 +150,7 @@ class HP6632B(PSU.PSU):
         """
         with self._lock:
             self.send_command("OUTP ON")
+            self._output_state = True
 
     def disable_output(self, output_nr=0) -> None:
         """
@@ -153,3 +160,13 @@ class HP6632B(PSU.PSU):
         """
         with self._lock:
             self.send_command("OUTP OFF")
+            self._output_state = False
+
+    def get_output_state(self, output_nr=0) -> bool:
+        return self._output_state
+
+    def get_current(self, output_nr=0) -> float:
+        return self._set_current
+
+    def get_voltage(self, output_nr=0) -> float:
+        return self._set_voltage

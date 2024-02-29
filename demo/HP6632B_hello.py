@@ -1,10 +1,10 @@
 import os
 import time
-
 from dotenv import load_dotenv
 
-import labequipment.framework.log
 from labequipment.device.PSU import HP6632B
+from labequipment.framework.log import setup_custom_logger
+setup_custom_logger()
 
 if not load_dotenv():
     raise ValueError(".env file not found")

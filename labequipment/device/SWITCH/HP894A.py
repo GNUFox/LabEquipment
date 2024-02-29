@@ -1,6 +1,5 @@
 from labequipment.device import device
 from labequipment.device.connection import USBTMCConnection, DummyConnection
-import labequipment.framework.log
 
 from enum import IntEnum
 
@@ -42,6 +41,8 @@ class HP8954A(device.device):
                 idn = self._connection.receive_data()
                 if len(idn) >= len(self._expected_device_type):
                     idn = idn[0:len(self._expected_device_type)]
+                else:
+                    return  # TODO: error check / return ??
 
                 if self._check_device_type(idn, self._expected_device_type):
                     logger.info("Connected")

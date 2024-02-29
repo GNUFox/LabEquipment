@@ -1,11 +1,10 @@
 import os
 import sys
-import time
-
 from dotenv import load_dotenv
 
-import labequipment.framework.log
 from labequipment.device.DMM.HP3457A import HP3457A, acdc, TriggerType
+from labequipment.framework.log import setup_custom_logger
+setup_custom_logger()
 
 if not load_dotenv():
     raise ValueError(".env file not found")

@@ -1,9 +1,10 @@
 import os
 from unittest import TestCase
 from dotenv import load_dotenv
-import labequipment.framework.log
 from labequipment.device.AWG import ORX_402A
 from labequipment.device.AWG.ORX_402A import Waveforms, OutputState
+from labequipment.framework.log import setup_custom_logger
+setup_custom_logger()
 
 if not load_dotenv():
     raise ValueError(".env file not found")
