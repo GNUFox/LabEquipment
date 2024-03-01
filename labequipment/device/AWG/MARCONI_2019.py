@@ -21,6 +21,11 @@ class VoltageUnits(Enum):
     VOLT = "VL"
 
 
+class AmplitudeInputUnit(IntEnum):
+    VOLTS = 0
+    DECIBELS = 1
+
+
 class ModFrequencies(IntEnum):
     F0k3 = 0
     F0k4 = 1
@@ -116,7 +121,7 @@ class MARCONI_2019(AWG.AWG):
 
     _set_cf: float  # currently set carrier frequency
     _set_amp: float  # currently set amplitude
-    _set_amp_unit: str  # currently set amplitude unit  # TODO: use enum / type
+    _set_amp_unit: AmplitudeInputUnit  # currently set amplitude unit
     _set_fm_dev: float  # currently set FM deviation
     _set_am_mod_idx: float  # currently set AM modulation index
     _set_int_mod_freq: ModFrequencies  # currently selected mod. frequency or external mod. source
@@ -181,7 +186,8 @@ class MARCONI_2019(AWG.AWG):
     def get_frequency(self, output_nr: float = 0) -> float:
         return self._set_cf  # TODO: check with values from device whenever updated (cache)
 
-    def set_amplitude(self, amp: float, output_nr: int = 0, unit: str = "db", keep_output_off: bool = False) -> None:
+    def set_amplitude(self, amp: float, output_nr: int = 0, unit: AmplitudeInputUnit = AmplitudeInputUnit.DECIBELS,
+                      keep_output_off: bool = False) -> None:
         """
         Set output RF level
 
@@ -194,11 +200,10 @@ class MARCONI_2019(AWG.AWG):
         @param keep_output_off:  keep output off after setting level
         @return:
         """
-        unit = unit.lower()
 
         amp_str: str
-        if unit == "v":
-            if not (amp >= self.ampl_v_min and amp <= self.amp_v_max):
+        if unit == AmplitudeInputUnit.VOLTS:
+            if not (self.ampl_v_min <= amp <= self.amp_v_max):
                 logger.error(f"Amplitude {amp}V outside voltage range [{self.ampl_v_min} {self.amp_v_max}]")
                 return
 
@@ -225,9 +230,9 @@ class MARCONI_2019(AWG.AWG):
             if keep_output_off:
                 amp_str += ', OF'
             with self._lock:
-                self.send_command(f"LV {amp_str} {voltage_unit.value}")
-        elif unit == "db":
-            if not (amp >= self.ampl_db_min and amp <= self.amp_db_max):
+                self.send_command(f"LV {amp_str} {voltage_unit.value}{', OF' if keep_output_off else ''}")
+        elif unit == AmplitudeInputUnit.DECIBELS:
+            if not (self.ampl_db_min <= amp <= self.amp_db_max):
                 logger.error(f"Amplitude {amp} db outside decibel range [{self.ampl_db_min} {self.amp_db_max}]")
                 return
 
@@ -238,8 +243,6 @@ class MARCONI_2019(AWG.AWG):
 
             with self._lock:
                 self.send_command(f"LV {amp_str} DB{', OF' if keep_output_off else ''}")
-        else:
-            logger.error("Unit must be v (volts) or db (decibels)")
 
     def get_amplitude(self, output_nr: int = 0) -> float:
         return self._set_amp

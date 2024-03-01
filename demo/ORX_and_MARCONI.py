@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 from labequipment.device.AWG import MARCONI_2019, ORX_402A
 from labequipment.device.AWG.ORX_402A import Waveforms
-from labequipment.device.AWG.MARCONI_2019 import ModFrequencies
+from labequipment.device.AWG.MARCONI_2019 import ModFrequencies, AmplitudeInputUnit
 from labequipment.framework.log import setup_custom_logger
 setup_custom_logger()
 
@@ -30,7 +30,7 @@ def main():
 
     marconi.set_frequency(433.5E6)
     marconi.set_fm(3.5E3)
-    marconi.set_amplitude(-85, unit="db")
+    marconi.set_amplitude(-85, unit=AmplitudeInputUnit.DECIBELS)
     marconi.set_modulation_src(ModFrequencies.ext)
 
     time.sleep(0.5)

@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv
 
 from labequipment.device.AWG import MARCONI_2019
-from labequipment.device.AWG.MARCONI_2019 import ModFrequencies
+from labequipment.device.AWG.MARCONI_2019 import ModFrequencies, AmplitudeInputUnit
 from labequipment.framework.log import setup_custom_logger
 setup_custom_logger()
 
@@ -24,18 +24,18 @@ def test():
 
     awg.set_frequency(123.1234567890123E3)
     awg.set_frequency(433.500E6)
-    awg.set_amplitude(1, unit="v")
-    awg.set_amplitude(1.2345E-6, unit="V")  # 1.234 UV
-    awg.set_amplitude(12.345E-3, unit="V")  # 12.34 MV
-    awg.set_amplitude(52.345E-3, unit="V")  # 52.3 MV
+    awg.set_amplitude(1, unit=AmplitudeInputUnit.VOLTS)
+    awg.set_amplitude(1.2345E-6, unit=AmplitudeInputUnit.VOLTS)  # 1.234 UV
+    awg.set_amplitude(12.345E-3, unit=AmplitudeInputUnit.VOLTS)  # 12.34 MV
+    awg.set_amplitude(52.345E-3, unit=AmplitudeInputUnit.VOLTS)  # 52.3 MV
 
-    awg.set_amplitude(1.2345E-3, unit="V")  # 1.234 MV
-    awg.set_amplitude(2.2345E-3, unit="V")  # 2.23 MV
-    awg.set_amplitude(0.1234E-3, unit="V")  # 123.4 UV
-    awg.set_amplitude(0.1234E-2, unit="V")  # 1234 UV or 1.234 MV
-    awg.set_amplitude(0.2234E-2, unit="V")  # 2.23 MV
-    awg.set_amplitude(234.5E-6, unit="V")  # 234 UV
-    awg.set_amplitude(-75, unit="db")
+    awg.set_amplitude(1.2345E-3, unit=AmplitudeInputUnit.VOLTS)  # 1.234 MV
+    awg.set_amplitude(2.2345E-3, unit=AmplitudeInputUnit.VOLTS)  # 2.23 MV
+    awg.set_amplitude(0.1234E-3, unit=AmplitudeInputUnit.VOLTS)  # 123.4 UV
+    awg.set_amplitude(0.1234E-2, unit=AmplitudeInputUnit.VOLTS)  # 1234 UV or 1.234 MV
+    awg.set_amplitude(0.2234E-2, unit=AmplitudeInputUnit.VOLTS)  # 2.23 MV
+    awg.set_amplitude(234.5E-6, unit=AmplitudeInputUnit.VOLTS)  # 234 UV
+    awg.set_amplitude(-75, unit=AmplitudeInputUnit.DECIBELS)
 
     print("------------")
 
@@ -57,7 +57,7 @@ def fm_dev_sweep_test():
     awg.set_frequency(default_carrier_freq)
     awg.set_fm(default_fm_dev)
     awg.set_modulation_src(ModFrequencies.F1k0)
-    awg.set_amplitude(default_rf_lvl, unit="db")
+    awg.set_amplitude(default_rf_lvl, unit=AmplitudeInputUnit.VOLTS)
 
     for j in range(3):
         for i in range(100, 3000, 50):
@@ -74,7 +74,7 @@ def am_test():
     awg.set_frequency(default_carrier_freq)
     awg.set_am(default_am_mod_idx)
     awg.set_modulation_src(ModFrequencies.F0k4)
-    awg.set_amplitude(amp=default_rf_lvl, unit="db")
+    awg.set_amplitude(amp=default_rf_lvl, unit=AmplitudeInputUnit.VOLTS)
     time.sleep(2)
 
     awg.disable_output()
@@ -87,7 +87,7 @@ def am_ext_mod_test():
     awg.set_frequency(default_carrier_freq)
     awg.set_am(default_am_mod_idx)
     awg.set_modulation_src(ModFrequencies.ext)
-    awg.set_amplitude(amp=default_rf_lvl, unit="db")
+    awg.set_amplitude(amp=default_rf_lvl, unit=AmplitudeInputUnit.VOLTS)
     awg.set_alc(True)
     time.sleep(2)
     awg.set_alc(False)
