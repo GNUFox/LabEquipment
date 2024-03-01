@@ -26,6 +26,9 @@ def main():
     hp34401a.connect()
     psu.connect()
 
+    if not (psu.get_ok() and hp3457a.get_ok() and hp34401a.get_ok()):
+        return
+
     psu.set_voltage(1)
     psu.set_current(0.05)
     psu.enable_output()

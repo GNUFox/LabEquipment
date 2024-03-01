@@ -16,6 +16,9 @@ def main():
     dmm = HP3457A(visa_resource=visa_res, reset_after_connect=True)
     dmm.connect()
 
+    if not dmm.get_ok():
+        return
+
     print("### Quick Voltage measurement: V = ", end='')
     volt = dmm.voltage()
     print(f"{volt}")

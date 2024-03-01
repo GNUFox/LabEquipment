@@ -32,8 +32,8 @@ class HP34401A(DMM.DMM):
                 if idn:
                     name = idn.split(',')[1]
                     if self._check_device_type(name, self._expected_device_type):
-                        logger.info("Connected")
                         self._ok = True
+                        logger.info(f"Connected to {self._friendly_name}")
 
                 if not self._ok:
                     logger.error("Connected but no answer")

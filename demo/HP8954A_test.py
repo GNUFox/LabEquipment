@@ -17,6 +17,9 @@ def rx_tx_test():
     sw = HP894A.HP8954A(visa_resource=visa_res)
     sw.connect()
 
+    if not sw.get_ok():
+        return
+
     sw.transmit_key_on()
     time.sleep(0.5)
     sw.transmit_key_off()
@@ -30,6 +33,8 @@ def aux_relays_test():
     sw = HP894A.HP8954A(visa_resource=visa_res)
 
     sw.connect()
+    if not sw.get_ok():
+        return
 
     for m in sw.aux_relays:
         sw.set_aux_relay(rly=m, state=True)

@@ -155,8 +155,10 @@ class MARCONI_2019(AWG.AWG):
             connect_success = self._connection.connect()
             if connect_success == 0:
                 rx = self.receive_data()  # 010400000000000000000060210608020000000000
+                # TODO: parse + validate state string
                 if len(rx) == self.state_string_length:
                     self._ok = True
+                    logger.info(f"Connected to {self._friendly_name}")
                 else:
                     self._ok = False
 

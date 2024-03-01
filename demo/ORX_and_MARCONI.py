@@ -23,6 +23,9 @@ def main():
     marconi.connect()
     awg.connect()
 
+    if not (awg.get_ok() and marconi.get_ok()):
+        return
+
     awg.set_amplitude(1)
     awg.set_waveform(Waveforms.SINE)
     awg.set_frequency(1000)

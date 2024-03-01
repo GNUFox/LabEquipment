@@ -87,8 +87,8 @@ class HP3457A(DMM):
                 idn = self.receive_data()
                 if idn:
                     if self._check_device_type(idn, self._expected_device_type):
-                        logger.info("connected")
                         self._ok = True
+                        logger.info(f"Connected to {self._friendly_name}")
                         if self._reset_after_connect:
                             logger.info("Resetting instrument")
                             self.send_command("RESET")

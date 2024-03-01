@@ -171,7 +171,7 @@ class ORX_402A(AWG.AWG):
                     self.send_command("N0")
                     self._ok = self._get_all_and_ok()
                 if self._ok:
-                    logger.debug(f"Connected to {self._friendly_name}")
+                    logger.info(f"Connected to {self._friendly_name}")
                 else:
                     logger.error("Connection success but no or incorrect answer")
             else:

@@ -54,9 +54,9 @@ class HP6632B(PSU.PSU):
                     if idn:
                         name = idn.split(',')[1]
                         if self._check_device_type(name, self._expected_device_type):
-                            logger.info("Connected")
-                            self.display_normal()
                             self._ok = True
+                            logger.info(f"Connected to {self._friendly_name}")
+                            self.display_normal()
                     else:
                         logger.warning("Retrying connect")
 

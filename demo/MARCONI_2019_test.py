@@ -21,6 +21,8 @@ visa_res = os.getenv("MARCONI_VISA_RES")
 def test():
     awg = MARCONI_2019.MARCONI_2019()
     awg.connect()
+    if not awg.get_ok():
+        return
 
     awg.set_frequency(123.1234567890123E3)
     awg.set_frequency(433.500E6)
@@ -53,6 +55,8 @@ def test():
 def fm_dev_sweep_test():
     awg = MARCONI_2019.MARCONI_2019(visa_resource=visa_res)
     awg.connect()
+    if not awg.get_ok():
+        return
 
     awg.set_frequency(default_carrier_freq)
     awg.set_fm(default_fm_dev)
@@ -70,6 +74,8 @@ def fm_dev_sweep_test():
 def am_test():
     awg = MARCONI_2019.MARCONI_2019(visa_resource=visa_res)
     awg.connect()
+    if not awg.get_ok():
+        return
 
     awg.set_frequency(default_carrier_freq)
     awg.set_am(default_am_mod_idx)
@@ -83,6 +89,8 @@ def am_test():
 def am_ext_mod_test():
     awg = MARCONI_2019.MARCONI_2019(visa_resource=visa_res)
     awg.connect()
+    if not awg.get_ok():
+        return
 
     awg.set_frequency(default_carrier_freq)
     awg.set_am(default_am_mod_idx)

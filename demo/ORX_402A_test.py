@@ -17,6 +17,8 @@ visa_res = os.getenv("ORX_VISA_RES")
 def main():
     awg = ORX_402A.ORX_402A(visa_resource=visa_res)
     awg.connect()
+    if not awg.get_ok():
+        return
 
     awg.set_frequency(1234e3)
     awg.set_frequency(1234)

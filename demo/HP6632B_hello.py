@@ -17,6 +17,8 @@ def test():
     # psu = HP6632B.HP6632B()
 
     psu.connect()
+    if not psu.get_ok():
+        return
     psu.set_current(0.4)
     # psu.set_voltage(12)
     psu.enable_output()

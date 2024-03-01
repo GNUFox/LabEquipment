@@ -45,8 +45,8 @@ class HP8954A(device.device):
                     return  # TODO: error check / return ??
 
                 if self._check_device_type(idn, self._expected_device_type):
-                    logger.info("Connected")
                     self._ok = True
+                    logger.info(f"Connected to {self._friendly_name}")
 
     def transmit_key_on(self):
         with self._lock:

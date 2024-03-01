@@ -4,7 +4,7 @@ from enum import Enum
 from telnetlib import Telnet
 import usbtmc
 from usbtmc.usbtmc import UsbtmcException
-from usb.core import USBTimeoutError
+from usb.core import USBTimeoutError, USBError
 import serial
 
 import logging
@@ -50,14 +50,15 @@ class Connection(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def send_command(self, command: str):
+    def send_command(self, command: str) -> int:
         logger.debug(f"[{type(self).__name__}] [{self._destination}] Sending command '{command}'")
+        return 0
 
     @abstractmethod
-    def receive_data(self) -> str:
+    def receive_data(self) -> str | None:
         pass
 
-    def receive_data_raw(self, n_bytes: int = -1) -> bytes:
+    def receive_data_raw(self, n_bytes: int = -1) -> bytes | None:
         pass
 
     def get_last_command(self) -> str:
@@ -81,9 +82,10 @@ class DummyConnection(Connection):
         self._last_commands = []
         return 0
 
-    def send_command(self, command: str):
+    def send_command(self, command: str) -> int:
         super().send_command(command)
         self._last_commands.append(command)
+        return 0
 
     def receive_data(self, dummy_data="DUMMY") -> str:
         return dummy_data
@@ -215,22 +217,29 @@ class USBTMCConnection(Connection):
         logger.debug("Disconnect usbtmc")
         self._usbtmc_connection.close()
 
-    def send_command(self, command: str):
+    def send_command(self, command: str) -> int:
         super().send_command(command)
-
+        success = 1
         try:
             self._usbtmc_connection.write(f"{command}")
+            success = 0
         except UsbtmcException:
             logger.error("Sending command failed")
+        except USBError:
+            logger.error("USBError while sending USBTMC command")
 
-    def receive_data(self):
+        return success
+
+    def receive_data(self) -> str | None:
         data = None
         try:
             data = self._usbtmc_connection.read()
         except UsbtmcException:
-            logger.error("Reading USBTMC data failed")
+            logger.error("UsbtmcException while reading USBTMC data")
         except USBTimeoutError:
             logger.error("Timeout while reading USBTMC data")
+        except USBError:
+            logger.error("USBError while reading USBTMC data")
 
         return data
 
@@ -248,8 +257,8 @@ class USBTMCConnection(Connection):
     def get_visa_res(self) -> str:
         return self._visa_resource_string
 
-    def xyphro_usb_gpib_adaptor_settings(self, command: XyphroUSBGPIBConfig) -> str:
-        answer = ""
+    def xyphro_usb_gpib_adaptor_settings(self, command: XyphroUSBGPIBConfig) -> str | None:
+        answer = None
         try:
             self._usbtmc_connection.pulse()
             if command.value.endswith('?'):

@@ -56,7 +56,7 @@ class device(metaclass=abc.ABCMeta):
     def send_command(self, command: str):
         self._connection.send_command(command)
 
-    def receive_data(self) -> str:
+    def receive_data(self) -> str | None:
         return self._connection.receive_data()
 
     def receive_data_raw(self, n_bytes: int = -1) -> bytes:
